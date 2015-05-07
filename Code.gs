@@ -76,6 +76,7 @@ function _populateWorkbook(){
     entryHeaderRange.setFontSize(14)
     entryHeaderRange.setFontWeight("bold");
     entryHeaderRange.gsetHorizontalAlignment("center");
+    entryHeaderRange.setBorder(true, true, true, true, false, false);
     
     //finishing up, make the transactions sheet the active sheet
     workbook.setActiveSheet(transactionsSheet)
