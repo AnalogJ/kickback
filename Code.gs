@@ -49,6 +49,11 @@ function use() {
     _populateWorkbook()
 }
 
+//*************************************************************************************************
+// Style/Design functions
+//*************************************************************************************************
+
+
 /**
  * This function will populate the google workbook with our designed sheets and base formulas
  * @private
@@ -82,6 +87,7 @@ function _populateWorkbook(){
     entryHeaderRange.setFontWeight("bold");
     entryHeaderRange.setHorizontalAlignment("center");
     entryHeaderRange.setBorder(true, true, true, true, false, false);
+    entryHeaderRange.setWrap(true);
 
     //getRange(row, column, numRows, numColumns)
     var payeeHeaderTopRange = transactionsSheet.getRange(1,7,1,users.length)
@@ -110,18 +116,26 @@ function _populateWorkbook(){
     //getRange(row, column, numRows, numColumns)
     var paymentHeaderRange = transactionsSheet.getRange(1,7+ users.length, 2,3);
     paymentHeaderRange.mergeVertically();
-    paymentHeaderRange.setValues(['Self Pay','Ind. Payment','Payer Collects']);
+    paymentHeaderRange.setValues([['Self Pay','Ind. Payment','Payer Collects'],['','','']]);
     paymentHeaderRange.setBackgroundColor('#b1b2b1');
     paymentHeaderRange.setFontFamily('Open Sans');
     paymentHeaderRange.setFontSize(14)
     paymentHeaderRange.setFontWeight("bold");
     paymentHeaderRange.setHorizontalAlignment("center");
     paymentHeaderRange.setBorder(true, true, true, true, false, false);
+    entryHeaderRange.setWrap(true);
 
-    //finishing up, make the transactions sheet the active sheet
-    workbook.setActiveSheet(transactionsSheet)
+    //hide the first
+    transactionsSheet.hideRows(3)
+    transactionsSheet.setFrozenRows(2);
+
 
 }
+
+//*************************************************************************************************
+// Document Storage functions
+//*************************************************************************************************
+
 
 function _getUsers(){
     var documentProperties = PropertiesService.getDocumentProperties();
@@ -156,6 +170,11 @@ function _addUser(email, first_name, last_name){
 
 
 }
+
+
+//*************************************************************************************************
+// Utility functions
+//*************************************************************************************************
 
 function _arrayContains(a, obj) {
     for (var i = 0; i < a.length; i++) {
