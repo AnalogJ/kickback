@@ -56,7 +56,7 @@ function use() {
 function _populateWorkbook(){
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
     var transactionsSheet = workbook.insertSheet('Transactions', 0)
-    var summarySheet = workbook.insertSheet('Summary', 1)
+    //var summarySheet = workbook.insertSheet('Summary', 1)
 
     //delete any other sheets.
     var sheets = workbook.getSheets()
@@ -67,7 +67,7 @@ function _populateWorkbook(){
     }
 
     var documentProperties = PropertiesService.getDocumentProperties();
-    var users = documentProperties.getProperty('USERS')
+    var users = _getUsers()
     //populate the transactions sheet.
     //The transactions sheet has 3 distinct sections, entry information, payee information, payment information
     transactionsSheet.activate();
@@ -83,8 +83,9 @@ function _populateWorkbook(){
     entryHeaderRange.setHorizontalAlignment("center");
     entryHeaderRange.setBorder(true, true, true, true, false, false);
 
+    //getRange(row, column, numRows, numColumns)
     var payeeHeaderTopRange = transactionsSheet.getRange(1,7,1,users.length)
-    payeeHeaderTopRange.mergeHorizontally();
+    payeeHeaderTopRange.mergeAcross();
     payeeHeaderTopRange.setValue('Paid For Who');
     payeeHeaderTopRange.setBackgroundColor('#b1b2b1');
     payeeHeaderTopRange.setFontFamily('Open Sans');
@@ -93,12 +94,13 @@ function _populateWorkbook(){
     payeeHeaderTopRange.setHorizontalAlignment("center");
     payeeHeaderTopRange.setBorder(true, true, true, true, false, false);
 
+    //getRange(row, column, numRows, numColumns)
     var payeeHeaderBottomRange = transactionsSheet.getRange(2,7,1,users.length);
     var names = [];
     for(var ndx in users){
         names.push(users[ndx].display_name)
     }
-    payeeHeaderBottomRange.setValues(names);
+    payeeHeaderBottomRange.setValues([names]);
     payeeHeaderBottomRange.setBackgroundColor('#d0d0d0');
     payeeHeaderBottomRange.setFontFamily('Open Sans');
     payeeHeaderBottomRange.setFontSize(11)
@@ -121,6 +123,11 @@ function _populateWorkbook(){
 
 }
 
+function _getUsers(){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    var users_str = documentProperties.getProperty('USERS') || '';
+    return JSON.parse(users_str);
+}
 
 function _addUser(email, first_name, last_name){
     var documentProperties = PropertiesService.getDocumentProperties();
@@ -130,14 +137,33 @@ function _addUser(email, first_name, last_name){
     workbook.addEditor(email)
 
     //save the user to the document properties.
-    var users = documentProperties.getProperty('USERS') || {};
-    users[email] = {
+    var users_str = documentProperties.getProperty('USERS') || '';
+    var users = [];
+    if(users_str){
+        users = JSON.parse(users_str);
+    }
+
+    var new_user = {
         first_name: first_name,
         last_name: last_name,
         display_name: first_name + ' ' + last_name[0]
     }
-    documentProperties.setProperty('USERS', users)
 
+    if(!_arrayContains(users, new_user)){
+        users.push(new_user);
+        documentProperties.setProperty('USERS', JSON.stringify(users));
+    }
+
+
+}
+
+function _arrayContains(a, obj) {
+    for (var i = 0; i < a.length; i++) {
+        if (a[i] === obj) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
