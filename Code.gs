@@ -56,31 +56,33 @@ function use() {
 // Style/Design functions
 //*************************************************************************************************
 
-var HEADER_FONT_SIZE = 12;
-var HEADER_FONT_FAMILY = 'Open Sans';
-var HEADER_BACKGROUND_COLOR = '#b1b2b1';
-
-var BODY_TOP = 3;
-var BODY_TOP_OFFSET = 50;
-
 var COLOR_SWATCHES = ['#468966', '#FFF0A5', '#FFB03B', '#B64926', '#8E2800','#0F2D40','#194759','#296B73','#3E8C84','#D8F2F0']
 
 /**
  * This function will populate the google workbook with our designed sheets and base formulas
  * @private
  */
-function _populateWorkbook(){
+function _populateWorkbook() {
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
     var transactionsSheet = workbook.insertSheet('Transactions', 0);
-    //var summarySheet = workbook.insertSheet('Summary', 1)
+    var summarySheet = workbook.insertSheet('Summary', 1)
 
     //delete any other sheets.
     var sheets = workbook.getSheets();
-    if(sheets.length > 2){
-        for(var ndx =2; ndx<sheets.length; ndx++){
+    if (sheets.length > 2) {
+        for (var ndx = 2; ndx < sheets.length; ndx++) {
             workbook.deleteSheet(sheets[ndx])
         }
     }
+
+    _configureTransactionsSheet(transactionsSheet);
+    _configureSummarySheet(summarySheet);
+    transactionsSheet.activate();
+}
+
+function _configureTransactionsSheet(transactionsSheet){
+    var BODY_TOP = 3;
+    var BODY_TOP_OFFSET = 50;
 
     var users = _getUsers();
     //populate the transactions sheet.
@@ -88,7 +90,7 @@ function _populateWorkbook(){
     transactionsSheet.activate();
 
     //getRange(row, column, numRows, numColumns)
-    var ENTRY_HEADER_TEXT = [['Date Purchased','Location','Item','Currency','Amount Paid', 'Amount Paid ('+_getTripCurrency()+')', 'Who Paid'],
+    var ENTRY_HEADER_TEXT = [['Date Purchased','Location','Item','Currency','Amount Paid', 'Amount Paid ('+_getUserCurrency()+')', 'Who Paid'],
         ['','','','','','','']];
     var ENTRY_HEADER_LEFT = 1;
     var ENTRY_HEADER_LEFT_OFFSET = ENTRY_HEADER_TEXT[0].length;
@@ -96,13 +98,7 @@ function _populateWorkbook(){
     var entryHeaderRange = transactionsSheet.getRange(1,ENTRY_HEADER_LEFT,2,ENTRY_HEADER_LEFT_OFFSET);
     entryHeaderRange.mergeVertically();
     entryHeaderRange.setValues(ENTRY_HEADER_TEXT);
-    entryHeaderRange.setBackgroundColor(HEADER_BACKGROUND_COLOR);
-    entryHeaderRange.setFontFamily(HEADER_FONT_FAMILY);
-    entryHeaderRange.setFontSize(HEADER_FONT_SIZE);
-    entryHeaderRange.setFontWeight("bold");
-    entryHeaderRange.setHorizontalAlignment("center");
-    entryHeaderRange.setBorder(true, true, true, true, false, false);
-    entryHeaderRange.setWrap(true);
+    _setHeaderStyle(entryHeaderRange);
 
     //getRange(row, column, numRows, numColumns)
     var PAYEE_HEADER_LEFT = ENTRY_HEADER_LEFT + ENTRY_HEADER_LEFT_OFFSET + 1;
@@ -111,12 +107,7 @@ function _populateWorkbook(){
     var payeeHeaderTopRange = transactionsSheet.getRange(1,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET)
     payeeHeaderTopRange.mergeAcross();
     payeeHeaderTopRange.setValue('Paid For Who');
-    payeeHeaderTopRange.setBackgroundColor(HEADER_BACKGROUND_COLOR);
-    payeeHeaderTopRange.setFontFamily(HEADER_FONT_FAMILY);
-    payeeHeaderTopRange.setFontSize(HEADER_FONT_SIZE);
-    payeeHeaderTopRange.setFontWeight("bold");
-    payeeHeaderTopRange.setHorizontalAlignment("center");
-    payeeHeaderTopRange.setBorder(true, true, true, true, false, false);
+    _setHeaderStyle(payeeHeaderTopRange);
 
     //getRange(row, column, numRows, numColumns)
     var payeeHeaderBottomRange = transactionsSheet.getRange(2,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET);
@@ -125,27 +116,18 @@ function _populateWorkbook(){
         names.push(users[ndx].display_name)
     }
     payeeHeaderBottomRange.setValues([names]);
-    payeeHeaderBottomRange.setBackgroundColor('#d0d0d0');
-    payeeHeaderBottomRange.setFontFamily(HEADER_FONT_FAMILY);
-    payeeHeaderBottomRange.setFontSize(9);
-    payeeHeaderBottomRange.setHorizontalAlignment("center");
-    payeeHeaderBottomRange.setBorder(true, true, true, true, false, false);
+    _setSubHeaderStyle(payeeHeaderBottomRange);
+
 
     //getRange(row, column, numRows, numColumns)
     var PAYMENT_HEADER_TEXT = [['Self Pay','Ind. Payment','Payer Collects'],['','','']];
     var PAYMENT_HEADER_LEFT = PAYEE_HEADER_LEFT + PAYEE_HEADER_LEFT_OFFSET + 1;
-    var PAYMNET_HEADER_LEFT_OFFSET = PAYMENT_HEADER_TEXT[0].length;
+    var PAYMENT_HEADER_LEFT_OFFSET = PAYMENT_HEADER_TEXT[0].length;
 
-    var paymentHeaderRange = transactionsSheet.getRange(1,PAYMENT_HEADER_LEFT, 2,PAYMNET_HEADER_LEFT_OFFSET);
+    var paymentHeaderRange = transactionsSheet.getRange(1,PAYMENT_HEADER_LEFT, 2,PAYMENT_HEADER_LEFT_OFFSET);
     paymentHeaderRange.mergeVertically();
     paymentHeaderRange.setValues(PAYMENT_HEADER_TEXT);
-    paymentHeaderRange.setBackgroundColor(HEADER_BACKGROUND_COLOR);
-    paymentHeaderRange.setFontFamily(HEADER_FONT_FAMILY);
-    paymentHeaderRange.setFontSize(HEADER_FONT_SIZE);
-    paymentHeaderRange.setFontWeight("bold");
-    paymentHeaderRange.setHorizontalAlignment("center");
-    paymentHeaderRange.setBorder(true, true, true, true, false, false);
-    entryHeaderRange.setWrap(true);
+    _setHeaderStyle(paymentHeaderRange);
 
     //hide the first
     transactionsSheet.hideRows(3);
@@ -158,10 +140,11 @@ function _populateWorkbook(){
     var datePurchasedRule = SpreadsheetApp.newDataValidation()
         .requireDate()
         .setAllowInvalid(true)
-        .setHelpText('Date this item was purchased')
+        .setHelpText('Date this item was purchased. This date is used to do any required currency conversion.')
         .build();
     datePurchasedBodyRange.setDataValidation(datePurchasedRule);
     datePurchasedBodyRange.setNumberFormat("dd-mm-yyyy");
+    _setBodyStyle(datePurchasedBodyRange);
 
     //set the currency validation.
     //getRange(row, column, numRows, numColumns)
@@ -175,7 +158,7 @@ function _populateWorkbook(){
         .setHelpText('Currency used to pay for this item.')
         .build();
     currencyBodyRange.setDataValidation(currencyRule);
-
+    _setBodyStyle(currencyBodyRange);
 
     //set the amount paid validation
     var amountPaidColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid');
@@ -187,8 +170,109 @@ function _populateWorkbook(){
         .build();
     amountPaidBodyRange.setDataValidation(amountPaidRule);
     amountPaidBodyRange.setNumberFormat("$0.00");
+    _setBodyStyle(amountPaidBodyRange);
+
+
+    //set the amount paid currency conversion
+    var amountPaidUserColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid ('+_getUserCurrency()+')');
+    var amountPaidUserBodyRange = transactionsSheet.getRange(BODY_TOP,amountPaidUserColumn, BODY_TOP_OFFSET,1);
+    var amountPaidUserRule = SpreadsheetApp.newDataValidation()
+        .requireNumberGreaterThan(0)
+        .setAllowInvalid(false)
+        .setHelpText('Amount this item was puchased for')
+        .build();
+    amountPaidUserBodyRange.setDataValidation(amountPaidUserRule);
+    amountPaidUserBodyRange.setNumberFormat("$0.00");
+//TODO: look at the google Finanace method and lookup a specific date.
+    amountPaidUserBodyRange.setFormulaR1C1("=GoogleFinance('Currency:USDCAD')*R[0]C[-1]");
+    _setBodyStyle(amountPaidUserBodyRange);
+
+    var whoPaidColumn =  ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Who Paid');
+    var whoPaidBodyRange = transactionsSheet.getRange(BODY_TOP,whoPaidColumn, BODY_TOP_OFFSET,1);
+    var whoPaidRule = SpreadsheetApp.newDataValidation()
+        .requireValueInRange(payeeHeaderBottomRange, true)
+        .setAllowInvalid(false)
+        .setHelpText('The user who paid for this item.')
+        .build();
+    whoPaidBodyRange.setDataValidation(whoPaidRule);
+    _setBodyStyle(whoPaidBodyRange);
+
+    var paidForColumn = PAYEE_HEADER_LEFT
+    var paidForBodyRange = transactionsSheet.getRange(BODY_TOP,paidForColumn, BODY_TOP_OFFSET,PAYMENT_HEADER_LEFT_OFFSET);
+    var paidForRule = SpreadsheetApp.newDataValidation()
+        .requireValueInList(['Y','YS'], true)
+        .setAllowInvalid(false)
+        .setHelpText('When payer pays for themselves, use `YS`')
+        .build();
+    paidForBodyRange.setDataValidation(paidForRule);
+    _setBodyStyle(paidForBodyRange);
+}
+
+function _configureSummarySheet(summarySheet){
+    var users = _getUsers();
+
+    var BODY_TOP = 2;
+    var BODY_TOP_OFFSET = users.length;
+
+    //populate the transactions sheet.
+    //The summary sheet has one block of information.
+    summarySheet.activate();
+
+    //getRange(row, column, numRows, numColumns)
+    var SUMMARY_HEADER_TEXT = ['Name','Gets','Gives','Banker Collects','Rounded', '% Difference'];
+    var SUMMARY_HEADER_LEFT = 1;
+    var SUMMARY_HEADER_LEFT_OFFSET = SUMMARY_HEADER_TEXT[0].length;
+
+    var summaryHeaderRange = summarySheet.getRange(1,SUMMARY_HEADER_LEFT,1,SUMMARY_HEADER_LEFT_OFFSET);
+    _setSubHeaderStyle(summaryHeaderRange);
+    summaryHeaderRange.setFontWeight("bold");
+    summaryHeaderRange.setHorizontalAlignment("left");
+
+    //set the date purchased validation
+    var nameColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT.indexOf('Name');
+    var nameBodyRange = summarySheet.getRange(BODY_TOP,nameColumn, BODY_TOP_OFFSET,1);
+    var nameBodyRangeValues = [];
+    var nameBodyRangeBackgrounds = [];
+    for(var ndx in users){
+        nameBodyRangeValues.push([users[ndx]])
+        nameBodyRangeBackgrounds.push([COLOR_SWATCHES[ndx % COLOR_SWATCHES.length]])
+    }
+    _setHeaderStyle(nameBodyRange);
+    nameBodyRange.setValues(nameBodyRangeValues);
+    nameBodyRange.setBackgrounds(nameBodyRangeBackgrounds);
+
+
+
 
 }
+
+var HEADER_FONT_SIZE = 12;
+var HEADER_FONT_FAMILY = 'Open Sans';
+var HEADER_BACKGROUND_COLOR = '#b1b2b1';
+
+function _setHeaderStyle(range){
+    range.setBackgroundColor(HEADER_BACKGROUND_COLOR);
+    range.setFontFamily(HEADER_FONT_FAMILY);
+    range.setFontSize(HEADER_FONT_SIZE);
+    range.setFontWeight("bold");
+    range.setHorizontalAlignment("center");
+    range.setBorder(true, true, true, true, false, false);
+    range.setWrap(true);
+}
+function _setSubHeaderStyle(range){
+    range.setBackgroundColor('#d0d0d0');
+    range.setFontFamily(HEADER_FONT_FAMILY);
+    range.setFontSize(9);
+    range.setHorizontalAlignment("center");
+    range.setBorder(true, true, true, true, false, false);
+}
+
+function _setBodyStyle(range){
+    range.setFontSize(7);
+    range.setWrap(true);
+}
+
+
 
 //*************************************************************************************************
 // Document Storage functions
