@@ -39,12 +39,15 @@ function use() {
         ui.alert('Unfortunately this workbook is not empty. To protect your data, we cannot run a wizard on a non empty workbook.')
     }
 
+    _setTripCurrency('USD');
+    _setUserCurrency('CAD');
+
     //FOR TESTING HARDCODE USERS
-    _addUser('darkmethodz@gmail.com', 'Jason1', 'Kulatunga', 'USD');
-    _addUser('d.arkmethodz@gmail.com', 'Jason2', 'Kulatunga', 'USD');
-    _addUser('da.rkmethodz@gmail.com', 'Jason3', 'Kulatunga', 'USD');
-    _addUser('dar.kmethodz@gmail.com', 'Jason4', 'Kulatunga', 'USD');
-    _addUser('dark.methodz@gmail.com', 'Jason5', 'Kulatunga', 'USD');
+    _addUser('darkmethodz@gmail.com', 'Jason1', 'Kulatunga');
+    _addUser('d.arkmethodz@gmail.com', 'Jason2', 'Kulatunga');
+    _addUser('da.rkmethodz@gmail.com', 'Jason3', 'Kulatunga');
+    _addUser('dar.kmethodz@gmail.com', 'Jason4', 'Kulatunga');
+    _addUser('dark.methodz@gmail.com', 'Jason5', 'Kulatunga');
 
     _populateWorkbook()
 }
@@ -56,6 +59,9 @@ function use() {
 var HEADER_FONT_SIZE = 12;
 var HEADER_FONT_FAMILY = 'Open Sans';
 var HEADER_BACKGROUND_COLOR = '#b1b2b1';
+
+var BODY_TOP = 3;
+var BODY_TOP_OFFSET = 50;
 
 var COLOR_SWATCHES = ['#468966', '#FFF0A5', '#FFB03B', '#B64926', '#8E2800','#0F2D40','#194759','#296B73','#3E8C84','#D8F2F0']
 
@@ -76,14 +82,13 @@ function _populateWorkbook(){
         }
     }
 
-    var documentProperties = PropertiesService.getDocumentProperties();
     var users = _getUsers();
     //populate the transactions sheet.
     //The transactions sheet has 3 distinct sections, entry information, payee information, payment information
     transactionsSheet.activate();
 
     //getRange(row, column, numRows, numColumns)
-    var ENTRY_HEADER_TEXT = [['Date Purchased','Location','Item','Currency','Amount Paid', 'Amount Paid (USD)', 'Who Paid'],
+    var ENTRY_HEADER_TEXT = [['Date Purchased','Location','Item','Currency','Amount Paid', 'Amount Paid ('+_getTripCurrency()+')', 'Who Paid'],
         ['','','','','','','']];
     var ENTRY_HEADER_LEFT = 1;
     var ENTRY_HEADER_LEFT_OFFSET = ENTRY_HEADER_TEXT[0].length;
@@ -101,7 +106,7 @@ function _populateWorkbook(){
 
     //getRange(row, column, numRows, numColumns)
     var PAYEE_HEADER_LEFT = ENTRY_HEADER_LEFT + ENTRY_HEADER_LEFT_OFFSET + 1;
-    var PAYEE_HEADER_LEFT_OFFSET = users.length
+    var PAYEE_HEADER_LEFT_OFFSET = users.length;
 
     var payeeHeaderTopRange = transactionsSheet.getRange(1,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET)
     payeeHeaderTopRange.mergeAcross();
@@ -147,6 +152,42 @@ function _populateWorkbook(){
     transactionsSheet.setFrozenRows(2);
 
 
+    //set the date purchased validation
+    var datePurchasedColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Date Purchased');
+    var datePurchasedBodyRange = transactionsSheet.getRange(BODY_TOP,datePurchasedColumn, BODY_TOP_OFFSET,1);
+    var datePurchasedRule = SpreadsheetApp.newDataValidation()
+        .requireDate()
+        .setAllowInvalid(true)
+        .setHelpText('Date this item was purchased')
+        .build();
+    datePurchasedBodyRange.setDataValidation(datePurchasedRule);
+    datePurchasedBodyRange.setNumberFormat("dd-mm-yyyy");
+
+    //set the currency validation.
+    //getRange(row, column, numRows, numColumns)
+    var currencyColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Currency');
+    var currencyBodyRange = transactionsSheet.getRange(BODY_TOP,currencyColumn, BODY_TOP_OFFSET,1);
+
+    var currencies = [_getTripCurrency(),_getUserCurrency()];
+    var currencyRule = SpreadsheetApp.newDataValidation()
+        .requireValueInList(currencies, true)
+        .setAllowInvalid(false)
+        .setHelpText('Currency used to pay for this item.')
+        .build();
+    currencyBodyRange.setDataValidation(currencyRule);
+
+
+    //set the amount paid validation
+    var amountPaidColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid');
+    var amountPaidBodyRange = transactionsSheet.getRange(BODY_TOP,amountPaidColumn, BODY_TOP_OFFSET,1);
+    var amountPaidRule = SpreadsheetApp.newDataValidation()
+        .requireNumberGreaterThan(0)
+        .setAllowInvalid(false)
+        .setHelpText('Amount this item was puchased for')
+        .build();
+    amountPaidBodyRange.setDataValidation(amountPaidRule);
+    amountPaidBodyRange.setNumberFormat("$0.00");
+
 }
 
 //*************************************************************************************************
@@ -155,9 +196,15 @@ function _populateWorkbook(){
 
 
 function _getUsers(){
-    var documentProperties = PropertiesService.getDocumentProperties();
-    var users_str = documentProperties.getProperty('USERS') || '';
-    return JSON.parse(users_str);
+    //var documentProperties = PropertiesService.getDocumentProperties();
+    //var users_str = documentProperties.getProperty('USERS') || '';
+    //return JSON.parse(users_str);
+    return [
+        {first_name:'Jas1',last_name:'K',display_name:'Jas1 K'},
+        {first_name:'Jas2',last_name:'K',display_name:'Jas2 K'},
+        {first_name:'Jas3',last_name:'K',display_name:'Jas3 K'},
+        {first_name:'Jas4',last_name:'K',display_name:'Jas4 K'},
+    ]
 }
 
 function _addUser(email, first_name, last_name){
@@ -185,17 +232,34 @@ function _addUser(email, first_name, last_name){
         documentProperties.setProperty('USERS', JSON.stringify(users));
     }
 
-
 }
 
+function  _getTripCurrency(){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    return documentProperties.getProperty('TRIP_CURRENCY') || '';
+}
 
+function  _setTripCurrency(currency_code){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    return documentProperties.setProperty('TRIP_CURRENCY',currency_code||'');
+}
+
+function  _getUserCurrency(){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    return documentProperties.getProperty('USER_CURRENCY') || '';
+}
+
+function  _setUserCurrency(currency_code){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    return documentProperties.setProperty('USER_CURRENCY',currency_code||'');
+}
 //*************************************************************************************************
 // Utility functions
 //*************************************************************************************************
 
 function _arrayContains(a, obj) {
     for (var i = 0; i < a.length; i++) {
-        if (a[i] === obj) {
+        if (a[i] == obj) {
             return true;
         }
     }
