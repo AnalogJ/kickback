@@ -40,11 +40,11 @@ function use() {
     }
 
     //FOR TESTING HARDCODE USERS
-    _addUser('darkmethodz@gmail.com', 'Jason1', 'Kulatunga', 'USD')
-    _addUser('d.arkmethodz@gmail.com', 'Jason2', 'Kulatunga', 'USD')
-    _addUser('da.rkmethodz@gmail.com', 'Jason3', 'Kulatunga', 'USD')
-    _addUser('dar.kmethodz@gmail.com', 'Jason4', 'Kulatunga', 'USD')
-    _addUser('dark.methodz@gmail.com', 'Jason5', 'Kulatunga', 'USD')
+    _addUser('darkmethodz@gmail.com', 'Jason1', 'Kulatunga', 'USD');
+    _addUser('d.arkmethodz@gmail.com', 'Jason2', 'Kulatunga', 'USD');
+    _addUser('da.rkmethodz@gmail.com', 'Jason3', 'Kulatunga', 'USD');
+    _addUser('dar.kmethodz@gmail.com', 'Jason4', 'Kulatunga', 'USD');
+    _addUser('dark.methodz@gmail.com', 'Jason5', 'Kulatunga', 'USD');
 
     _populateWorkbook()
 }
@@ -53,6 +53,11 @@ function use() {
 // Style/Design functions
 //*************************************************************************************************
 
+var HEADER_FONT_SIZE = 12;
+var HEADER_FONT_FAMILY = 'Open Sans';
+var HEADER_BACKGROUND_COLOR = '#b1b2b1';
+
+var COLOR_SWATCHES = ['#468966', '#FFF0A5', '#FFB03B', '#B64926', '#8E2800','#0F2D40','#194759','#296B73','#3E8C84','#D8F2F0']
 
 /**
  * This function will populate the google workbook with our designed sheets and base formulas
@@ -60,11 +65,11 @@ function use() {
  */
 function _populateWorkbook(){
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
-    var transactionsSheet = workbook.insertSheet('Transactions', 0)
+    var transactionsSheet = workbook.insertSheet('Transactions', 0);
     //var summarySheet = workbook.insertSheet('Summary', 1)
 
     //delete any other sheets.
-    var sheets = workbook.getSheets()
+    var sheets = workbook.getSheets();
     if(sheets.length > 2){
         for(var ndx =2; ndx<sheets.length; ndx++){
             workbook.deleteSheet(sheets[ndx])
@@ -72,61 +77,73 @@ function _populateWorkbook(){
     }
 
     var documentProperties = PropertiesService.getDocumentProperties();
-    var users = _getUsers()
+    var users = _getUsers();
     //populate the transactions sheet.
     //The transactions sheet has 3 distinct sections, entry information, payee information, payment information
     transactionsSheet.activate();
 
     //getRange(row, column, numRows, numColumns)
-    var entryHeaderRange = transactionsSheet.getRange(1,1,2,6);
+    var ENTRY_HEADER_TEXT = [['Date Purchased','Location','Item','Currency','Amount Paid', 'Amount Paid (USD)', 'Who Paid'],
+        ['','','','','','','']];
+    var ENTRY_HEADER_LEFT = 1;
+    var ENTRY_HEADER_LEFT_OFFSET = ENTRY_HEADER_TEXT[0].length;
+
+    var entryHeaderRange = transactionsSheet.getRange(1,ENTRY_HEADER_LEFT,2,ENTRY_HEADER_LEFT_OFFSET);
     entryHeaderRange.mergeVertically();
-    entryHeaderRange.setValues([['Location','Item','Currency','Amount Paid', 'Amount Paid (USD)', 'Who Paid'],['','','','','','']])
-    entryHeaderRange.setBackgroundColor('#b1b2b1');
-    entryHeaderRange.setFontFamily('Open Sans');
-    entryHeaderRange.setFontSize(14)
+    entryHeaderRange.setValues(ENTRY_HEADER_TEXT);
+    entryHeaderRange.setBackgroundColor(HEADER_BACKGROUND_COLOR);
+    entryHeaderRange.setFontFamily(HEADER_FONT_FAMILY);
+    entryHeaderRange.setFontSize(HEADER_FONT_SIZE);
     entryHeaderRange.setFontWeight("bold");
     entryHeaderRange.setHorizontalAlignment("center");
     entryHeaderRange.setBorder(true, true, true, true, false, false);
     entryHeaderRange.setWrap(true);
 
     //getRange(row, column, numRows, numColumns)
-    var payeeHeaderTopRange = transactionsSheet.getRange(1,7,1,users.length)
+    var PAYEE_HEADER_LEFT = ENTRY_HEADER_LEFT + ENTRY_HEADER_LEFT_OFFSET + 1;
+    var PAYEE_HEADER_LEFT_OFFSET = users.length
+
+    var payeeHeaderTopRange = transactionsSheet.getRange(1,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET)
     payeeHeaderTopRange.mergeAcross();
     payeeHeaderTopRange.setValue('Paid For Who');
-    payeeHeaderTopRange.setBackgroundColor('#b1b2b1');
-    payeeHeaderTopRange.setFontFamily('Open Sans');
-    payeeHeaderTopRange.setFontSize(14)
+    payeeHeaderTopRange.setBackgroundColor(HEADER_BACKGROUND_COLOR);
+    payeeHeaderTopRange.setFontFamily(HEADER_FONT_FAMILY);
+    payeeHeaderTopRange.setFontSize(HEADER_FONT_SIZE);
     payeeHeaderTopRange.setFontWeight("bold");
     payeeHeaderTopRange.setHorizontalAlignment("center");
     payeeHeaderTopRange.setBorder(true, true, true, true, false, false);
 
     //getRange(row, column, numRows, numColumns)
-    var payeeHeaderBottomRange = transactionsSheet.getRange(2,7,1,users.length);
+    var payeeHeaderBottomRange = transactionsSheet.getRange(2,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET);
     var names = [];
     for(var ndx in users){
         names.push(users[ndx].display_name)
     }
     payeeHeaderBottomRange.setValues([names]);
     payeeHeaderBottomRange.setBackgroundColor('#d0d0d0');
-    payeeHeaderBottomRange.setFontFamily('Open Sans');
-    payeeHeaderBottomRange.setFontSize(11)
+    payeeHeaderBottomRange.setFontFamily(HEADER_FONT_FAMILY);
+    payeeHeaderBottomRange.setFontSize(9);
     payeeHeaderBottomRange.setHorizontalAlignment("center");
     payeeHeaderBottomRange.setBorder(true, true, true, true, false, false);
 
     //getRange(row, column, numRows, numColumns)
-    var paymentHeaderRange = transactionsSheet.getRange(1,7+ users.length, 2,3);
+    var PAYMENT_HEADER_TEXT = [['Self Pay','Ind. Payment','Payer Collects'],['','','']];
+    var PAYMENT_HEADER_LEFT = PAYEE_HEADER_LEFT + PAYEE_HEADER_LEFT_OFFSET + 1;
+    var PAYMNET_HEADER_LEFT_OFFSET = PAYMENT_HEADER_TEXT[0].length;
+
+    var paymentHeaderRange = transactionsSheet.getRange(1,PAYMENT_HEADER_LEFT, 2,PAYMNET_HEADER_LEFT_OFFSET);
     paymentHeaderRange.mergeVertically();
-    paymentHeaderRange.setValues([['Self Pay','Ind. Payment','Payer Collects'],['','','']]);
-    paymentHeaderRange.setBackgroundColor('#b1b2b1');
-    paymentHeaderRange.setFontFamily('Open Sans');
-    paymentHeaderRange.setFontSize(14)
+    paymentHeaderRange.setValues(PAYMENT_HEADER_TEXT);
+    paymentHeaderRange.setBackgroundColor(HEADER_BACKGROUND_COLOR);
+    paymentHeaderRange.setFontFamily(HEADER_FONT_FAMILY);
+    paymentHeaderRange.setFontSize(HEADER_FONT_SIZE);
     paymentHeaderRange.setFontWeight("bold");
     paymentHeaderRange.setHorizontalAlignment("center");
     paymentHeaderRange.setBorder(true, true, true, true, false, false);
     entryHeaderRange.setWrap(true);
 
     //hide the first
-    transactionsSheet.hideRows(3)
+    transactionsSheet.hideRows(3);
     transactionsSheet.setFrozenRows(2);
 
 
@@ -148,7 +165,7 @@ function _addUser(email, first_name, last_name){
 
     //send the user an invitation to the sheet.
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
-    workbook.addEditor(email)
+    workbook.addEditor(email);
 
     //save the user to the document properties.
     var users_str = documentProperties.getProperty('USERS') || '';
@@ -190,7 +207,7 @@ function _arrayContains(a, obj) {
  * @private
  */
 function _isSpreadsheetEmpty(){
-    var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets()
+    var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
     for(var ndx in sheets){
         var sheet = sheets[ndx];
         if(sheet.getLastRow() != 0 || sheet.getLastColumn() != 0){
