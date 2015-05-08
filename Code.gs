@@ -46,7 +46,7 @@ function use() {
     _addUser('dar.kmethodz@gmail.com', 'Jason4', 'Kulatunga', 'USD')
     _addUser('dark.methodz@gmail.com', 'Jason5', 'Kulatunga', 'USD')
 
-
+    _populateWorkbook()
 }
 
 /**
@@ -66,18 +66,56 @@ function _populateWorkbook(){
         }
     }
 
+    var documentProperties = PropertiesService.getDocumentProperties();
+    var users = documentProperties.getProperty('USERS')
     //populate the transactions sheet.
     //The transactions sheet has 3 distinct sections, entry information, payee information, payment information
     transactionsSheet.activate();
-    var entryHeaderRange = transactionsSheet.getRange(1, 1, 5);
-    entryHeaderRange.setValues(['Location','Item','Currency','Amount Paid', 'Amount Paid (USD)'])
-    entryHeaderRange.setFontColor('#b1b2b1');
+
+    //getRange(row, column, numRows, numColumns)
+    var entryHeaderRange = transactionsSheet.getRange(1,1,2,6);
+    entryHeaderRange.mergeVertically();
+    entryHeaderRange.setValues([['Location','Item','Currency','Amount Paid', 'Amount Paid (USD)', 'Who Paid'],['','','','','','']])
+    entryHeaderRange.setBackgroundColor('#b1b2b1');
     entryHeaderRange.setFontFamily('Open Sans');
     entryHeaderRange.setFontSize(14)
     entryHeaderRange.setFontWeight("bold");
-    entryHeaderRange.gsetHorizontalAlignment("center");
+    entryHeaderRange.setHorizontalAlignment("center");
     entryHeaderRange.setBorder(true, true, true, true, false, false);
-    
+
+    var payeeHeaderTopRange = transactionsSheet.getRange(1,7,1,users.length)
+    payeeHeaderTopRange.mergeHorizontally();
+    payeeHeaderTopRange.setValue('Paid For Who');
+    payeeHeaderTopRange.setBackgroundColor('#b1b2b1');
+    payeeHeaderTopRange.setFontFamily('Open Sans');
+    payeeHeaderTopRange.setFontSize(14)
+    payeeHeaderTopRange.setFontWeight("bold");
+    payeeHeaderTopRange.setHorizontalAlignment("center");
+    payeeHeaderTopRange.setBorder(true, true, true, true, false, false);
+
+    var payeeHeaderBottomRange = transactionsSheet.getRange(2,7,1,users.length);
+    var names = [];
+    for(var ndx in users){
+        names.push(users[ndx].display_name)
+    }
+    payeeHeaderBottomRange.setValues(names);
+    payeeHeaderBottomRange.setBackgroundColor('#d0d0d0');
+    payeeHeaderBottomRange.setFontFamily('Open Sans');
+    payeeHeaderBottomRange.setFontSize(11)
+    payeeHeaderBottomRange.setHorizontalAlignment("center");
+    payeeHeaderBottomRange.setBorder(true, true, true, true, false, false);
+
+    //getRange(row, column, numRows, numColumns)
+    var paymentHeaderRange = transactionsSheet.getRange(1,7+ users.length, 2,3);
+    paymentHeaderRange.mergeVertically();
+    paymentHeaderRange.setValues(['Self Pay','Ind. Payment','Payer Collects']);
+    paymentHeaderRange.setBackgroundColor('#b1b2b1');
+    paymentHeaderRange.setFontFamily('Open Sans');
+    paymentHeaderRange.setFontSize(14)
+    paymentHeaderRange.setFontWeight("bold");
+    paymentHeaderRange.setHorizontalAlignment("center");
+    paymentHeaderRange.setBorder(true, true, true, true, false, false);
+
     //finishing up, make the transactions sheet the active sheet
     workbook.setActiveSheet(transactionsSheet)
 
@@ -92,7 +130,7 @@ function _addUser(email, first_name, last_name){
     workbook.addEditor(email)
 
     //save the user to the document properties.
-    var users = documentProperties.getProperty('USERS')
+    var users = documentProperties.getProperty('USERS') || {};
     users[email] = {
         first_name: first_name,
         last_name: last_name,
