@@ -104,11 +104,6 @@ function _configureTransactionsSheet(transactionsSheet){
     var PAYEE_HEADER_LEFT = ENTRY_HEADER_LEFT + ENTRY_HEADER_LEFT_OFFSET;
     var PAYEE_HEADER_LEFT_OFFSET = users.length;
 
-    var payeeHeaderTopRange = transactionsSheet.getRange(1,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET)
-    payeeHeaderTopRange.mergeAcross();
-    payeeHeaderTopRange.setValue('Paid For Who');
-    _setHeaderStyle(payeeHeaderTopRange);
-
     //getRange(row, column, numRows, numColumns)
     var payeeHeaderBottomRange = transactionsSheet.getRange(2,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET);
     var names = [];
@@ -117,6 +112,15 @@ function _configureTransactionsSheet(transactionsSheet){
     }
     payeeHeaderBottomRange.setValues([names]);
     _setSubHeaderStyle(payeeHeaderBottomRange);
+    //resize the payee columns
+    for(var ndx in users){
+        transactionsSheet.autoResizeColumn(parseInt(PAYEE_HEADER_LEFT)+parseInt(ndx));
+    }
+
+    var payeeHeaderTopRange = transactionsSheet.getRange(1,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET)
+    payeeHeaderTopRange.mergeAcross();
+    payeeHeaderTopRange.setValue('Paid For Who');
+    _setHeaderStyle(payeeHeaderTopRange);
 
 
     //getRange(row, column, numRows, numColumns)
@@ -215,6 +219,8 @@ function _configureTransactionsSheet(transactionsSheet){
     var selfPayBodyRange = transactionsSheet.getRange(BODY_TOP,selfPayColumn, BODY_TOP_OFFSET,1);
     selfPayBodyRange.setFormulaR1C1('IF(COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS") > 0, "YS","")');
     _setBodyStyle(selfPayBodyRange);
+    transactionsSheet.autoResizeColumn(selfPayColumn);
+
 
     var indPaymentColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
     var indPaymentBodyRange = transactionsSheet.getRange(BODY_TOP,indPaymentColumn, BODY_TOP_OFFSET,1);
