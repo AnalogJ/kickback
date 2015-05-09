@@ -65,7 +65,7 @@ var COLOR_SWATCHES = ['#468966', '#FFF0A5', '#FFB03B', '#B64926', '#8E2800','#0F
 function _populateWorkbook() {
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
     var transactionsSheet = workbook.insertSheet('Transactions', 0);
-    var summarySheet = workbook.insertSheet('Summary', 1)
+//  var summarySheet = workbook.insertSheet('Summary', 1)
 
     //delete any other sheets.
     var sheets = workbook.getSheets();
@@ -76,7 +76,7 @@ function _populateWorkbook() {
     }
 
     _configureTransactionsSheet(transactionsSheet);
-    _configureSummarySheet(summarySheet);
+//  _configureSummarySheet(summarySheet);
     transactionsSheet.activate();
 }
 
@@ -101,7 +101,7 @@ function _configureTransactionsSheet(transactionsSheet){
     _setHeaderStyle(entryHeaderRange);
 
     //getRange(row, column, numRows, numColumns)
-    var PAYEE_HEADER_LEFT = ENTRY_HEADER_LEFT + ENTRY_HEADER_LEFT_OFFSET + 1;
+    var PAYEE_HEADER_LEFT = ENTRY_HEADER_LEFT + ENTRY_HEADER_LEFT_OFFSET;
     var PAYEE_HEADER_LEFT_OFFSET = users.length;
 
     var payeeHeaderTopRange = transactionsSheet.getRange(1,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET)
@@ -121,7 +121,7 @@ function _configureTransactionsSheet(transactionsSheet){
 
     //getRange(row, column, numRows, numColumns)
     var PAYMENT_HEADER_TEXT = [['Self Pay','Ind. Payment','Payer Collects'],['','','']];
-    var PAYMENT_HEADER_LEFT = PAYEE_HEADER_LEFT + PAYEE_HEADER_LEFT_OFFSET + 1;
+    var PAYMENT_HEADER_LEFT = PAYEE_HEADER_LEFT + PAYEE_HEADER_LEFT_OFFSET;
     var PAYMENT_HEADER_LEFT_OFFSET = PAYMENT_HEADER_TEXT[0].length;
 
     var paymentHeaderRange = transactionsSheet.getRange(1,PAYMENT_HEADER_LEFT, 2,PAYMENT_HEADER_LEFT_OFFSET);
@@ -184,7 +184,9 @@ function _configureTransactionsSheet(transactionsSheet){
     amountPaidUserBodyRange.setDataValidation(amountPaidUserRule);
     amountPaidUserBodyRange.setNumberFormat("$0.00");
 //TODO: look at the google Finanace method and lookup a specific date.
-    amountPaidUserBodyRange.setFormulaR1C1("=GoogleFinance('Currency:USDCAD')*R[0]C[-1]");
+//TODO: first check if the user currency and the selected currency are the same, and pass through.
+    //=IF(EQ("CAD",D4),E4,GOOGLEFINANCE(CONCATENATE("CURRENCY:",D4,"CAD"))*E4)
+    amountPaidUserBodyRange.setFormulaR1C1('=IF(EQ("'+_getUserCurrency()+'",R[0]C[-2]),R[0]C[-1],GOOGLEFINANCE(CONCATENATE("CURRENCY:",R[0]C[-2],"'+_getUserCurrency()+'"))*R[0]C[-1])');
     _setBodyStyle(amountPaidUserBodyRange);
 
     var whoPaidColumn =  ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Who Paid');
@@ -197,7 +199,7 @@ function _configureTransactionsSheet(transactionsSheet){
     whoPaidBodyRange.setDataValidation(whoPaidRule);
     _setBodyStyle(whoPaidBodyRange);
 
-    var paidForColumn = PAYEE_HEADER_LEFT
+    var paidForColumn = PAYEE_HEADER_LEFT;
     var paidForBodyRange = transactionsSheet.getRange(BODY_TOP,paidForColumn, BODY_TOP_OFFSET,PAYMENT_HEADER_LEFT_OFFSET);
     var paidForRule = SpreadsheetApp.newDataValidation()
         .requireValueInList(['Y','YS'], true)
@@ -207,17 +209,17 @@ function _configureTransactionsSheet(transactionsSheet){
     paidForBodyRange.setDataValidation(paidForRule);
     _setBodyStyle(paidForBodyRange);
 
-    var selfPayColumn = PAYMENT_HEADER_TEXT + PAYMENT_HEADER_TEXT[0].indexOf('Self Pay');
+    var selfPayColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Self Pay');
     var selfPayBodyRange = transactionsSheet.getRange(BODY_TOP,selfPayColumn, BODY_TOP_OFFSET,1);
 //TODO: fill this range with a formula
     _setBodyStyle(selfPayBodyRange);
 
-    var indPaymentColumn = PAYMENT_HEADER_TEXT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
+    var indPaymentColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
     var indPaymentBodyRange = transactionsSheet.getRange(BODY_TOP,indPaymentColumn, BODY_TOP_OFFSET,1);
 //TODO: fill this range with a formula
     _setBodyStyle(indPaymentBodyRange);
 
-    var payerCollectsColumn = PAYMENT_HEADER_TEXT + PAYMENT_HEADER_TEXT[0].indexOf('Payer Collects');
+    var payerCollectsColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Payer Collects');
     var payerCollectsBodyRange = transactionsSheet.getRange(BODY_TOP,payerCollectsColumn, BODY_TOP_OFFSET,1);
 //TODO: fill this range with a formula
     _setBodyStyle(payerCollectsBodyRange);
