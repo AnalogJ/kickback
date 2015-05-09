@@ -157,6 +157,14 @@ function _configureTransactionsSheet(transactionsSheet){
     datePurchasedBodyRange.setNumberFormat("dd-mm-yyyy");
     _setBodyStyle(datePurchasedBodyRange);
 
+    var locationColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Location');
+    var locationBodyRange = transactionsSheet.getRange(BODY_TOP,locationColumn, BODY_TOP_OFFSET,1);
+    _setBodyStyle(locationBodyRange);
+
+    var itemColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Item');
+    var itemBodyRange = transactionsSheet.getRange(BODY_TOP,itemColumn, BODY_TOP_OFFSET,1);
+    _setBodyStyle(itemBodyRange);
+
     //set the currency validation.
     //getRange(row, column, numRows, numColumns)
     var currencyColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Currency');
