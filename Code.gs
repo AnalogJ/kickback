@@ -206,6 +206,22 @@ function _configureTransactionsSheet(transactionsSheet){
         .build();
     paidForBodyRange.setDataValidation(paidForRule);
     _setBodyStyle(paidForBodyRange);
+
+    var selfPayColumn = PAYMENT_HEADER_TEXT + PAYMENT_HEADER_TEXT[0].indexOf('Self Pay');
+    var selfPayBodyRange = transactionsSheet.getRange(BODY_TOP,selfPayColumn, BODY_TOP_OFFSET,1);
+//TODO: fill this range with a formula
+    _setBodyStyle(selfPayBodyRange);
+
+    var indPaymentColumn = PAYMENT_HEADER_TEXT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
+    var indPaymentBodyRange = transactionsSheet.getRange(BODY_TOP,indPaymentColumn, BODY_TOP_OFFSET,1);
+//TODO: fill this range with a formula
+    _setBodyStyle(indPaymentBodyRange);
+
+    var payerCollectsColumn = PAYMENT_HEADER_TEXT + PAYMENT_HEADER_TEXT[0].indexOf('Payer Collects');
+    var payerCollectsBodyRange = transactionsSheet.getRange(BODY_TOP,payerCollectsColumn, BODY_TOP_OFFSET,1);
+//TODO: fill this range with a formula
+    _setBodyStyle(payerCollectsBodyRange);
+    payerCollectsBodyRange.setFontWeight("bold");
 }
 
 function _configureSummarySheet(summarySheet){
@@ -241,9 +257,30 @@ function _configureSummarySheet(summarySheet){
     nameBodyRange.setValues(nameBodyRangeValues);
     nameBodyRange.setBackgrounds(nameBodyRangeBackgrounds);
 
+    var getsColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT.indexOf('Gets');
+    var getsBodyRange = summarySheet.getRange(BODY_TOP,getsColumn, BODY_TOP_OFFSET,1);
+//TODO: fill this range with a formula
+    _setSummaryBodyStyle(getsBodyRange);
 
+    var givesColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT.indexOf('Gives');
+    var givesBodyRange = summarySheet.getRange(BODY_TOP,givesColumn, BODY_TOP_OFFSET,1);
+//TODO: fill this range with a formula
+    _setSummaryBodyStyle(givesBodyRange);
 
+    var bankerCollectsColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT.indexOf('Banker Collects');
+    var bankerCollectsBodyRange = summarySheet.getRange(BODY_TOP,bankerCollectsColumn, BODY_TOP_OFFSET,1);
+//TODO: fill this range with a formula
+    _setSummaryBodyStyle(bankerCollectsBodyRange);
 
+    var roundedColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT.indexOf('Rounded');
+    var roundedBodyRange = summarySheet.getRange(BODY_TOP, roundedColumn, BODY_TOP_OFFSET,1);
+//TODO: fill this range with a formula
+    _setSummaryBodyStyle(roundedBodyRange);
+
+    var percentDiffColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT.indexOf('% Difference');
+    var percentDiffBodyRange = summarySheet.getRange(BODY_TOP, percentDiffColumn, BODY_TOP_OFFSET,1);
+//TODO: fill this range with a formula
+    _setSummaryBodyStyle(percentDiffBodyRange);
 }
 
 var HEADER_FONT_SIZE = 12;
@@ -270,6 +307,12 @@ function _setSubHeaderStyle(range){
 function _setBodyStyle(range){
     range.setFontSize(7);
     range.setWrap(true);
+}
+
+function _setSummaryBodyStyle(range){
+    range.setBackgroundColor('#d0d0d0');
+    range.setFontFamily(HEADER_FONT_FAMILY);
+    range.setFontSize(14);
 }
 
 
