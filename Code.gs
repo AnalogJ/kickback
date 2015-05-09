@@ -20,7 +20,7 @@ function onInstall() {
  */
 function onOpen() {
     SpreadsheetApp.getUi().createAddonMenu()
-        .addItem('Run Kickback Wizard', 'wizard')
+        .addItem('Run Kickback Wizard', 'use')
         .addItem('Add new traveller', 'add_traveller')
         .addToUi();
 }
@@ -124,7 +124,7 @@ function add_traveller(){
  * Enables the add-on on for the current spreadsheet (simply by running) and
  * shows a popup informing the user of the new functions that are available.
  */
-function wizard() {
+function use() {
     //ui.alert(title, message, ui.ButtonSet.OK);
     var ui = SpreadsheetApp.getUi();
 
@@ -142,24 +142,21 @@ function wizard() {
         ui.alert('Unfortunately this workbook is not empty. To protect your data, we cannot run a wizard on a non empty workbook.')
         return;
     }
-
-    _setTripCurrency('USD');
-    _setUserCurrency('CAD');
-
-    //FOR TESTING HARDCODE USERS
-    _clearUsers()
-    _addUser('Jason K');
-    _addUser('Jon D');
-    _addUser('John Q');
-    _addUser('Jimmy J');
-    _addUser('Jack M');
-    _addUser('Jessy S');
-
-    _populateWorkbook()
 }
 
 function wizard_submit(form_data){
     Logger.log(form_data)
+
+    var settings = JSON.parse(form_data);
+
+    _setTripCurrencies(settings['trip_currencies[]']);
+    _setUserCurrency(settings['trav_currency']);
+
+    _clearUsers()
+    for(var ndx in settings["traveller[]"]){
+        _addUser(settings["traveller[]"][ndx]);
+    }
+    _populateWorkbook()
 }
 
 //*************************************************************************************************
@@ -286,7 +283,11 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     var currencyColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Currency');
     var currencyBodyRange = transactionsSheet.getRange(BODY_TOP,currencyColumn, BODY_TOP_OFFSET,1);
 
-    var currencies = [_getTripCurrency(),_getUserCurrency()];
+
+    var currencies = [];
+    currencies = currencies.concat(_getTripCurrencies())
+    currencies.push(_getUserCurrency());
+    currencies = _unique(currencies);
     var currencyRule = SpreadsheetApp.newDataValidation()
         .requireValueInList(currencies, true)
         .setAllowInvalid(false)
@@ -539,14 +540,18 @@ function _addUser(username){
 
 }
 
-function  _getTripCurrency(){
+function  _getTripCurrencies(){
     var documentProperties = PropertiesService.getDocumentProperties();
-    return documentProperties.getProperty('TRIP_CURRENCY') || '';
+    var trip_currencies_str = documentProperties.getProperty('TRIP_CURRENCIES');
+    if(trip_currencies_str){
+        return  JSON.parse(trip_currencies_str)
+    }
+    return [];
 }
 
-function  _setTripCurrency(currency_code){
+function  _setTripCurrencies(currency_array){
     var documentProperties = PropertiesService.getDocumentProperties();
-    return documentProperties.setProperty('TRIP_CURRENCY',currency_code||'');
+    return documentProperties.setProperty('TRIP_CURRENCIES', JSON.stringify(currency_array||[]));
 }
 
 function  _getUserCurrency(){
@@ -562,17 +567,12 @@ function  _setUserCurrency(currency_code){
 // Utility functions
 //*************************************************************************************************
 
-function _arrayContains(a, obj) {
-    var exists = false;
-    for (var i = 0; i < a.length; i++) {
-        for(var prop in obj){
-            exists = (exists && (obj[prop] == a[i][prop]))
-        }
-        if(exists){
-            return true;
-        }
+function _unique(array){
+    //make sure we only show unique currencies
+    function onlyUnique(value, index, self) {
+        return self.indexOf(value) === index;
     }
-    return false;
+    return array.filter( onlyUnique );
 }
 
 /**

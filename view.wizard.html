@@ -118,8 +118,29 @@
 
         $('#kickback_form').submit(function(){
 
-            var content = JSON.stringify($("#kickback_form").serializeObject())
-            console.log(content);
+            var content = $("#kickback_form").serializeObject();
+            console.log(JSON.stringify(content));
+
+            //validation
+            content['traveller[]'] = $.grep(content['traveller[]'] || [], function(traveller) { return !!traveller })
+            if(content['traveller[]'].length < 2 ){
+                alert('Atleast two Travellers are required');
+                return false;
+            }
+
+            content['trip_currencies[]'] = $.grep(content['trip_currencies[]'] || [], function(currency) { return !!currency })
+            if(content['trip_currencies[]'].length == 0){
+                alert('Trip Currency is required');
+                return false;
+            }
+
+            if(!content.trav_currency){
+                alert('Traveller\'s Currency is required');
+                return false;
+            }
+
+
+
             $('button').attr('disabled', 'disabled').addClass('disabled');
             $('input').attr('disabled','disabled').addClass('disabled');
             google.script.run
@@ -135,7 +156,7 @@
                         $('input').attr('disabled','').removeClass('disabled');
                     })
                     .withUserObject(this)
-                    .wizard_submit(content);
+                    .wizard_submit(JSON.stringify(content));
 
             return false;
         })
