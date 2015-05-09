@@ -125,14 +125,22 @@ function add_traveller(){
  * shows a popup informing the user of the new functions that are available.
  */
 function wizard() {
-    var ui = SpreadsheetApp.getUi();
     //ui.alert(title, message, ui.ButtonSet.OK);
+    var ui = SpreadsheetApp.getUi();
 
     if(_isSpreadsheetEmpty()){
-        ui.alert('Welcome to the Kickback for Google Sheets wizard')
+//        ui.alert('Welcome to the Kickback for Google Sheets wizard')
+
+        var html = HtmlService.createHtmlOutputFromFile('view.wizard')
+            .setSandboxMode(HtmlService.SandboxMode.IFRAME)
+            .setWidth(500)
+            .setHeight(500);
+        ui.showModalDialog(html, 'Kickback Wizard');
+        return;
     }
     else{
         ui.alert('Unfortunately this workbook is not empty. To protect your data, we cannot run a wizard on a non empty workbook.')
+        return;
     }
 
     _setTripCurrency('USD');
@@ -148,6 +156,10 @@ function wizard() {
     _addUser('Jessy S');
 
     _populateWorkbook()
+}
+
+function wizard_submit(form_data){
+    Logger.log(form_data)
 }
 
 //*************************************************************************************************
