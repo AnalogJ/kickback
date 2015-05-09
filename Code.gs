@@ -38,6 +38,7 @@ function onEdit(e){
     var currentSheet = e.range.getSheet();
     if(currentSheet.getName() != "Transactions"){
         //we dont care about changes to any sheet other than the Transactions sheet.
+        Logger.log('Current Sheet is not Transactions. Skipping');
         return;
     }
 
@@ -53,16 +54,20 @@ function onEdit(e){
         _rangeIntersect(e.range,paidForRange)
         )){
         //this edited range does not intesect with a watched range.
+        Logger.log('The edited range does not intesect with a watched range. Skipping.');
         return;
     }
 
     //Before processing rows, ensure that the rows we process match the row we care about.
     var first_row = Math.max(e.range.getRow(),currencyRange.getRow());
     var last_row = Math.min(e.range.getLastRow(),currencyRange.getLastRow());
+    Logger.log(first_row);
+    Logger.log(last_row);
 
     for(var row = first_row; row<=last_row; row++){
         //set the background for the currency col.
         var currencyCell = currentSheet.getRange(row, currencyRange.getColumn());
+        Logger.log('Currency cell value:' + currencyCell.getValue());
         if(currencyCell.getValue() == _getUserCurrency()){
             //if the currency of this item is the same as the user currency, the background color should be white.
             currencyCell.setBackground('white')
@@ -77,7 +82,7 @@ function onEdit(e){
         whoPaidCell.setBackground(_getUserColor(whoPaidCell.getValue()));
 
         //paid for who columns.
-        var paidForCells = currentSheet.getRange(row, paidForRange.getColumn(), 1, paidForRange.getLastColumn()-paidForRange.getColumn());
+        var paidForCells = currentSheet.getRange(row, paidForRange.getColumn(), 1, paidForRange.getLastColumn()-paidForRange.getColumn()+1);
         var paidForCellsValues =  paidForCells.getValues();
         var paidForCellsBackgrounds = [];
         for(var ndx in paidForCellsValues[0]){
@@ -390,7 +395,7 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
     var nameBodyRangeBackgrounds = [];
     for(var ndx in users){
         nameBodyRangeValues.push([users[ndx].display_name])
-        nameBodyRangeBackgrounds.push([COLOR_SWATCHES[(ndx % COLOR_SWATCHES.length) -1]])
+        nameBodyRangeBackgrounds.push([COLOR_SWATCHES[ndx % COLOR_SWATCHES.length]])
     }
     _setHeaderStyle(nameBodyRange);
     nameBodyRange.setValues(nameBodyRangeValues);
@@ -585,6 +590,6 @@ function _getUserColor(username){
         return 'white'
     }
     else{
-        return COLOR_SWATCHES[(user_ndx % COLOR_SWATCHES.length) -1]
+        return COLOR_SWATCHES[user_ndx % COLOR_SWATCHES.length]
     }
 }
