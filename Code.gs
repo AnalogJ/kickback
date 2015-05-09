@@ -89,6 +89,10 @@ function _configureTransactionsSheet(transactionsSheet){
     //The transactions sheet has 3 distinct sections, entry information, payee information, payment information
     transactionsSheet.activate();
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // HEADER SETUP
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     //getRange(row, column, numRows, numColumns)
     var ENTRY_HEADER_TEXT = [['Date Purchased','Location','Item','Currency','Amount Paid', 'Amount Paid ('+_getUserCurrency()+')', 'Who Paid'],
         ['','','','','','','']];
@@ -137,6 +141,9 @@ function _configureTransactionsSheet(transactionsSheet){
     transactionsSheet.hideRows(3);
     transactionsSheet.setFrozenRows(2);
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // BODY SETUP
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //set the date purchased validation
     var datePurchasedColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Date Purchased');
@@ -180,15 +187,9 @@ function _configureTransactionsSheet(transactionsSheet){
     //set the amount paid currency conversion
     var amountPaidUserColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid ('+_getUserCurrency()+')');
     var amountPaidUserBodyRange = transactionsSheet.getRange(BODY_TOP,amountPaidUserColumn, BODY_TOP_OFFSET,1);
-    var amountPaidUserRule = SpreadsheetApp.newDataValidation()
-        .requireNumberGreaterThan(0)
-        .setAllowInvalid(false)
-        .setHelpText('Amount this item was puchased for')
-        .build();
-    amountPaidUserBodyRange.setDataValidation(amountPaidUserRule);
     amountPaidUserBodyRange.setNumberFormat("$0.00");
 //TODO: look at the google Finanace method and lookup a specific date.
-    amountPaidUserBodyRange.setFormulaR1C1('=IF(EQ("'+_getUserCurrency()+'",R[0]C[-2]),R[0]C[-1],GOOGLEFINANCE(CONCATENATE("CURRENCY:",R[0]C[-2],"'+_getUserCurrency()+'"))*R[0]C[-1])');
+    amountPaidUserBodyRange.setFormulaR1C1('=IF(OR(EQ("'+_getUserCurrency()+'",R[0]C[-2]),ISBLANK(R[0]C[-2])),R[0]C[-1],GOOGLEFINANCE(CONCATENATE("CURRENCY:",R[0]C[-2],"'+_getUserCurrency()+'"))*R[0]C[-1])');
     _setBodyStyle(amountPaidUserBodyRange);
 
     var whoPaidColumn =  ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Who Paid');
@@ -257,6 +258,10 @@ function _configureSummarySheet(summarySheet,transactionsColumns){
     //The summary sheet has one block of information.
     summarySheet.activate();
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // HEADER SETUP
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     //getRange(row, column, numRows, numColumns)
     var SUMMARY_HEADER_TEXT = [['Name','Gets','Gives','Banker Collects','Rounded', '% Difference']];
     var SUMMARY_HEADER_LEFT = 1;
@@ -267,6 +272,10 @@ function _configureSummarySheet(summarySheet,transactionsColumns){
     _setSubHeaderStyle(summaryHeaderRange);
     summaryHeaderRange.setFontWeight("bold");
     summaryHeaderRange.setHorizontalAlignment("left");
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // BODY SETUP
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //set the date purchased validation
     var nameColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Name');
@@ -289,7 +298,7 @@ function _configureSummarySheet(summarySheet,transactionsColumns){
 
     var givesColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Gives');
     var givesBodyRange = summarySheet.getRange(BODY_TOP,givesColumn, BODY_TOP_OFFSET,1);
-    var formulas = []
+    var formulas = [];
     for(var ndx in users){
         formulas.push(['=SUMIF(Transactions!C'+(transactionsColumns.paidForColumn+ parseInt(ndx))+':C'+(transactionsColumns.paidForColumn+ parseInt(ndx))+', "Y", Transactions!C'+transactionsColumns.indPaymentColumn+':C'+transactionsColumns.indPaymentColumn+')'])
     }
