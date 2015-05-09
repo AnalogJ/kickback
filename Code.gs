@@ -225,7 +225,7 @@ function _configureTransactionsSheet(transactionsSheet){
     var indPaymentColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
     var indPaymentBodyRange = transactionsSheet.getRange(BODY_TOP,indPaymentColumn, BODY_TOP_OFFSET,1);
     //=E3/(COUNTIF(G3:M3,"Y")+COUNTIF(G3:M3,"YS"))
-    indPaymentBodyRange.setFormulaR1C1('=R[0]C'+amountPaidUserColumn+'/(COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")+COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS"))')
+    indPaymentBodyRange.setFormulaR1C1('=R[0]C'+amountPaidUserColumn+'/MAX((COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")+COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS")),1)')
     _setBodyStyle(indPaymentBodyRange);
     indPaymentBodyRange.setNumberFormat("$0.00");
 
