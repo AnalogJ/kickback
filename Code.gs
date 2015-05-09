@@ -207,21 +207,31 @@ function _configureTransactionsSheet(transactionsSheet){
     paidForBodyRange.setDataValidation(paidForRule);
     _setBodyStyle(paidForBodyRange);
 
+    //R1C1 Formula helper to specify the current row payees
+    var R1C1_CURRENT_ROW_PAYEES_RANGE = 'R[0]C'+PAYEE_HEADER_LEFT+':R[0]C'+(PAYEE_HEADER_LEFT+PAYEE_HEADER_LEFT_OFFSET-1)
+
+//TODO: ask chi why this has to be so complicated, using a simpler version here.
     var selfPayColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Self Pay');
     var selfPayBodyRange = transactionsSheet.getRange(BODY_TOP,selfPayColumn, BODY_TOP_OFFSET,1);
-//TODO: fill this range with a formula
+    selfPayBodyRange.setFormulaR1C1('IF(COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS") > 0, "YS","")');
     _setBodyStyle(selfPayBodyRange);
 
     var indPaymentColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
     var indPaymentBodyRange = transactionsSheet.getRange(BODY_TOP,indPaymentColumn, BODY_TOP_OFFSET,1);
-//TODO: fill this range with a formula
+    //=E3/(COUNTIF(G3:M3,"Y")+COUNTIF(G3:M3,"YS"))
+    indPaymentBodyRange.setFormulaR1C1('=R[0]C'+amountPaidUserColumn+'/(COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")+COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS"))')
     _setBodyStyle(indPaymentBodyRange);
+    indPaymentBodyRange.setNumberFormat("$0.00");
 
     var payerCollectsColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Payer Collects');
     var payerCollectsBodyRange = transactionsSheet.getRange(BODY_TOP,payerCollectsColumn, BODY_TOP_OFFSET,1);
 //TODO: fill this range with a formula
+//TODO: ask chi why this has to be so complicated, using a simpler version here.
+    //=IF(N5="YS",COUNTIF(G5:M5,"Y")*(E5/(COUNTIF(G5:M5,"Y")+1)),E5)
+    payerCollectsBodyRange.setFormulaR1C1('=R[0]C[-1]*COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")')
     _setBodyStyle(payerCollectsBodyRange);
     payerCollectsBodyRange.setFontWeight("bold");
+    payerCollectsBodyRange.setNumberFormat("$0.00");
 }
 
 function _configureSummarySheet(summarySheet){
@@ -387,8 +397,12 @@ function  _setUserCurrency(currency_code){
 //*************************************************************************************************
 
 function _arrayContains(a, obj) {
+    var exists = false;
     for (var i = 0; i < a.length; i++) {
-        if (a[i] == obj) {
+        for(var prop in obj){
+            exists = (exists && (obj[prop] == a[i][prop]))
+        }
+        if(exists){
             return true;
         }
     }
