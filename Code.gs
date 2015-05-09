@@ -107,10 +107,10 @@ function onEdit(e){
     for(var ndx in bankerCollectsCellsValues){
         var cellValue = bankerCollectsCellsValues[ndx][0];
         if(cellValue >= 0){
-            paidForCellsBackgrounds.push([COLOR_LIGHT_GREEN])
+            bankerCollectsCellsBackgrounds.push([COLOR_LIGHT_GREEN])
         }
         else{
-            paidForCellsBackgrounds.push([COLOR_LIGHT_RED])
+            bankerCollectsCellsBackgrounds.push([COLOR_LIGHT_RED])
         }
     }
     bankerCollectsCells.setBackgrounds(bankerCollectsCellsBackgrounds);
@@ -135,11 +135,13 @@ function use() {
     _setUserCurrency('CAD');
 
     //FOR TESTING HARDCODE USERS
-    _addUser('darkmethodz@gmail.com', 'Jason1', 'Kulatunga');
-    _addUser('d.arkmethodz@gmail.com', 'Jason2', 'Kulatunga');
-    _addUser('da.rkmethodz@gmail.com', 'Jason3', 'Kulatunga');
-    _addUser('dar.kmethodz@gmail.com', 'Jason4', 'Kulatunga');
-    _addUser('dark.methodz@gmail.com', 'Jason5', 'Kulatunga');
+    _clearUsers()
+    _addUser('Jason K');
+    _addUser('Jon D');
+    _addUser('John Q');
+    _addUser('Jimmy J');
+    _addUser('Jack M');
+    _addUser('Jessy S');
 
     _populateWorkbook()
 }
@@ -148,7 +150,9 @@ function use() {
 // Style/Design functions
 //*************************************************************************************************
 
-var COLOR_SWATCHES = ['#468966', '#FFF0A5', '#FFB03B', '#B64926', '#8E2800','#0F2D40','#194759','#296B73','#3E8C84','#D8F2F0']
+//var COLOR_SWATCHES = ['#468966', '#FFF0A5', '#FFB03B', '#B64926', '#8E2800','#0F2D40','#194759','#296B73','#3E8C84','#D8F2F0']
+var COLOR_SWATCHES = ['blue', 'purple', 'orange', 'red', 'green','yellow','brown','white'];
+
 var COLOR_LIGHT_GREEN = '#bbedc3';
 var COLOR_LIGHT_RED = '#feb8c3';
 /**
@@ -205,7 +209,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     var payeeHeaderBottomRange = transactionsSheet.getRange(2,PAYEE_HEADER_LEFT,1,PAYEE_HEADER_LEFT_OFFSET);
     var names = [];
     for(var ndx in users){
-        names.push(users[ndx].display_name)
+        names.push(users[ndx])
     }
     payeeHeaderBottomRange.setValues([names]);
     _setSubHeaderStyle(payeeHeaderBottomRange);
@@ -394,7 +398,7 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
     var nameBodyRangeValues = [];
     var nameBodyRangeBackgrounds = [];
     for(var ndx in users){
-        nameBodyRangeValues.push([users[ndx].display_name])
+        nameBodyRangeValues.push([users[ndx]])
         nameBodyRangeBackgrounds.push([COLOR_SWATCHES[ndx % COLOR_SWATCHES.length]])
     }
     _setHeaderStyle(nameBodyRange);
@@ -475,23 +479,21 @@ function _setSummaryBodyStyle(range){
 
 
 function _getUsers(){
-    //var documentProperties = PropertiesService.getDocumentProperties();
-    //var users_str = documentProperties.getProperty('USERS') || '';
-    //return JSON.parse(users_str);
-    return [
-        {first_name:'Jas1',last_name:'K',display_name:'Jas1 K'},
-        {first_name:'Jas2',last_name:'K',display_name:'Jas2 K'},
-        {first_name:'Jas3',last_name:'K',display_name:'Jas3 K'},
-        {first_name:'Jas4',last_name:'K',display_name:'Jas4 K'},
-    ]
+    var documentProperties = PropertiesService.getDocumentProperties();
+    var users_str = documentProperties.getProperty('USERS') || '';
+    return JSON.parse(users_str);
 }
 
-function _addUser(email, first_name, last_name){
+function _clearUsers(){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('USERS', '');
+}
+
+function _addUser(username){
     var documentProperties = PropertiesService.getDocumentProperties();
 
     //send the user an invitation to the sheet.
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
-    workbook.addEditor(email);
 
     //save the user to the document properties.
     var users_str = documentProperties.getProperty('USERS') || '';
@@ -500,14 +502,9 @@ function _addUser(email, first_name, last_name){
         users = JSON.parse(users_str);
     }
 
-    var new_user = {
-        first_name: first_name,
-        last_name: last_name,
-        display_name: first_name + ' ' + last_name[0]
-    }
 
-    if(!_arrayContains(users, new_user)){
-        users.push(new_user);
+    if(users.indexOf(username) == -1){
+        users.push(username);
         documentProperties.setProperty('USERS', JSON.stringify(users));
     }
 
