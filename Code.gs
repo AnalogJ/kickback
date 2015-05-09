@@ -184,8 +184,6 @@ function _configureTransactionsSheet(transactionsSheet){
     amountPaidUserBodyRange.setDataValidation(amountPaidUserRule);
     amountPaidUserBodyRange.setNumberFormat("$0.00");
 //TODO: look at the google Finanace method and lookup a specific date.
-//TODO: first check if the user currency and the selected currency are the same, and pass through.
-    //=IF(EQ("CAD",D4),E4,GOOGLEFINANCE(CONCATENATE("CURRENCY:",D4,"CAD"))*E4)
     amountPaidUserBodyRange.setFormulaR1C1('=IF(EQ("'+_getUserCurrency()+'",R[0]C[-2]),R[0]C[-1],GOOGLEFINANCE(CONCATENATE("CURRENCY:",R[0]C[-2],"'+_getUserCurrency()+'"))*R[0]C[-1])');
     _setBodyStyle(amountPaidUserBodyRange);
 
@@ -200,7 +198,7 @@ function _configureTransactionsSheet(transactionsSheet){
     _setBodyStyle(whoPaidBodyRange);
 
     var paidForColumn = PAYEE_HEADER_LEFT;
-    var paidForBodyRange = transactionsSheet.getRange(BODY_TOP,paidForColumn, BODY_TOP_OFFSET,PAYMENT_HEADER_LEFT_OFFSET);
+    var paidForBodyRange = transactionsSheet.getRange(BODY_TOP,paidForColumn, BODY_TOP_OFFSET,PAYEE_HEADER_LEFT_OFFSET);
     var paidForRule = SpreadsheetApp.newDataValidation()
         .requireValueInList(['Y','YS'], true)
         .setAllowInvalid(false)
@@ -309,6 +307,8 @@ function _setSubHeaderStyle(range){
 function _setBodyStyle(range){
     range.setFontSize(7);
     range.setWrap(true);
+    range.setHorizontalAlignment("center");
+
 }
 
 function _setSummaryBodyStyle(range){
