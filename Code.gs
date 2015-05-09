@@ -25,6 +25,93 @@ function onOpen() {
 }
 
 /**
+ * watch for changes in the following source columns:
+ * Currency
+ * Amount Paid
+ * Who Paid
+ * Paid for Who
+ * @param e
+ */
+function onEdit(e){
+    Logger.log(e)
+
+    var currentSheet = e.range.getSheet();
+    if(currentSheet.getName() != "Transactions"){
+        //we dont care about changes to any sheet other than the Transactions sheet.
+        return;
+    }
+
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var currencyRange = workbook.getRangeByName('TRANSACTIONS_BODY_CURRENCY');
+    var amountPaidRange = workbook.getRangeByName('TRANSACTIONS_BODY_AMOUNT_PAID');
+    var whoPaidRange = workbook.getRangeByName('TRANSACTIONS_BODY_WHO_PAID');
+    var paidForRange = workbook.getRangeByName('TRANSACTIONS_BODY_PAID_FOR');
+
+    if(!(_rangeIntersect(e.range,currencyRange) ||
+        _rangeIntersect(e.range,amountPaidRange) ||
+        _rangeIntersect(e.range,whoPaidRange) ||
+        _rangeIntersect(e.range,paidForRange)
+        )){
+        //this edited range does not intesect with a watched range.
+        return;
+    }
+
+    //Before processing rows, ensure that the rows we process match the row we care about.
+    var first_row = Math.max(e.range.getRow(),currencyRange.getRow());
+    var last_row = Math.min(e.range.getLastRow(),currencyRange.getLastRow());
+
+    for(var row = first_row; row<=last_row; row++){
+        //set the background for the currency col.
+        var currencyCell = currentSheet.getRange(row, currencyRange.getColumn());
+        if(currencyCell.getValue() == _getUserCurrency()){
+            //if the currency of this item is the same as the user currency, the background color should be white.
+            currencyCell.setBackground('white')
+        }
+        else{
+            //currency is different, we should highlight that fact
+            currencyCell.setBackground(COLOR_LIGHT_GREEN)
+        }
+
+        //set the background for the who paid column.
+        var whoPaidCell = currentSheet.getRange(row, whoPaidRange.getColumn());
+        whoPaidCell.setBackground(_getUserColor(whoPaidCell.getValue()));
+
+        //paid for who columns.
+        var paidForCells = currentSheet.getRange(row, paidForRange.getColumn(), 1, paidForRange.getLastColumn()-paidForRange.getColumn());
+        var paidForCellsValues =  paidForCells.getValues();
+        var paidForCellsBackgrounds = [];
+        for(var ndx in paidForCellsValues[0]){
+            var cellValue = paidForCellsValues[0][ndx];
+            if(cellValue == "Y" || cellValue == "YS"){
+                paidForCellsBackgrounds.push(COLOR_LIGHT_GREEN)
+            }
+            else{
+                paidForCellsBackgrounds.push('white')
+            }
+        }
+        paidForCells.setBackgrounds([paidForCellsBackgrounds]);
+    }
+
+    //update the background colors on the summary sheet.
+    var summarySheet = workbook.getSheetByName('Summary');
+    var bankerCollectsRange = workbook.getRangeByName('SUMMARY_BODY_BANKER_COLLECTS');
+
+    var bankerCollectsCells = summarySheet.getRange(2, bankerCollectsRange.getColumn(), _getUsers().length,1);
+    var bankerCollectsCellsValues =  bankerCollectsCells.getValues();
+    var bankerCollectsCellsBackgrounds = [];
+    for(var ndx in bankerCollectsCellsValues){
+        var cellValue = bankerCollectsCellsValues[ndx][0];
+        if(cellValue >= 0){
+            paidForCellsBackgrounds.push([COLOR_LIGHT_GREEN])
+        }
+        else{
+            paidForCellsBackgrounds.push([COLOR_LIGHT_RED])
+        }
+    }
+    bankerCollectsCells.setBackgrounds(bankerCollectsCellsBackgrounds);
+}
+
+/**
  * Enables the add-on on for the current spreadsheet (simply by running) and
  * shows a popup informing the user of the new functions that are available.
  */
@@ -57,7 +144,8 @@ function use() {
 //*************************************************************************************************
 
 var COLOR_SWATCHES = ['#468966', '#FFF0A5', '#FFB03B', '#B64926', '#8E2800','#0F2D40','#194759','#296B73','#3E8C84','#D8F2F0']
-
+var COLOR_LIGHT_GREEN = '#bbedc3';
+var COLOR_LIGHT_RED = '#feb8c3';
 /**
  * This function will populate the google workbook with our designed sheets and base formulas
  * @private
@@ -75,12 +163,12 @@ function _populateWorkbook() {
         }
     }
 
-    var transactionsColumns = _configureTransactionsSheet(transactionsSheet);
-    _configureSummarySheet(summarySheet,transactionsColumns);
+    var transactionsColumns = _configureTransactionsSheet(workbook,transactionsSheet);
+    _configureSummarySheet(workbook,summarySheet,transactionsColumns);
     transactionsSheet.activate();
 }
 
-function _configureTransactionsSheet(transactionsSheet){
+function _configureTransactionsSheet(workbook,transactionsSheet){
     var BODY_TOP = 3;
     var BODY_TOP_OFFSET = 50;
 
@@ -178,6 +266,7 @@ function _configureTransactionsSheet(transactionsSheet){
         .build();
     currencyBodyRange.setDataValidation(currencyRule);
     _setBodyStyle(currencyBodyRange);
+    workbook.setNamedRange('TRANSACTIONS_BODY_CURRENCY',currencyBodyRange);
 
     //set the amount paid validation
     var amountPaidColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid');
@@ -190,6 +279,7 @@ function _configureTransactionsSheet(transactionsSheet){
     amountPaidBodyRange.setDataValidation(amountPaidRule);
     amountPaidBodyRange.setNumberFormat("$0.00");
     _setBodyStyle(amountPaidBodyRange);
+    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID',currencyBodyRange);
 
 
     //set the amount paid currency conversion
@@ -209,6 +299,7 @@ function _configureTransactionsSheet(transactionsSheet){
         .build();
     whoPaidBodyRange.setDataValidation(whoPaidRule);
     _setBodyStyle(whoPaidBodyRange);
+    workbook.setNamedRange('TRANSACTIONS_BODY_WHO_PAID',whoPaidBodyRange);
 
     var paidForColumn = PAYEE_HEADER_LEFT;
     var paidForBodyRange = transactionsSheet.getRange(BODY_TOP,paidForColumn, BODY_TOP_OFFSET,PAYEE_HEADER_LEFT_OFFSET);
@@ -219,6 +310,7 @@ function _configureTransactionsSheet(transactionsSheet){
         .build();
     paidForBodyRange.setDataValidation(paidForRule);
     _setBodyStyle(paidForBodyRange);
+    workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForBodyRange);
 
     //R1C1 Formula helper to specify the current row payees
     var R1C1_CURRENT_ROW_PAYEES_RANGE = 'R[0]C'+PAYEE_HEADER_LEFT+':R[0]C'+(PAYEE_HEADER_LEFT+PAYEE_HEADER_LEFT_OFFSET-1)
@@ -229,6 +321,8 @@ function _configureTransactionsSheet(transactionsSheet){
     selfPayBodyRange.setFormulaR1C1('IF(COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS") > 0, "YS","")');
     _setBodyStyle(selfPayBodyRange);
     transactionsSheet.autoResizeColumn(selfPayColumn);
+    workbook.setNamedRange('TRANSACTIONS_BODY_SELF_PAY',selfPayBodyRange);
+
 
 
     var indPaymentColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
@@ -237,6 +331,8 @@ function _configureTransactionsSheet(transactionsSheet){
     indPaymentBodyRange.setFormulaR1C1('=R[0]C'+amountPaidUserColumn+'/MAX((COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")+COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS")),1)')
     _setBodyStyle(indPaymentBodyRange);
     indPaymentBodyRange.setNumberFormat("$0.00");
+    workbook.setNamedRange('TRANSACTIONS_BODY_IND_PAYMENT',indPaymentBodyRange);
+
 
     var payerCollectsColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Payer Collects');
     var payerCollectsBodyRange = transactionsSheet.getRange(BODY_TOP,payerCollectsColumn, BODY_TOP_OFFSET,1);
@@ -247,6 +343,8 @@ function _configureTransactionsSheet(transactionsSheet){
     _setBodyStyle(payerCollectsBodyRange);
     payerCollectsBodyRange.setFontWeight("bold");
     payerCollectsBodyRange.setNumberFormat("$0.00");
+    workbook.setNamedRange('TRANSACTIONS_BODY_PAYER_COLLECTS',payerCollectsBodyRange);
+
 
     return {
         whoPaidColumn: whoPaidColumn,
@@ -256,7 +354,7 @@ function _configureTransactionsSheet(transactionsSheet){
     }
 }
 
-function _configureSummarySheet(summarySheet,transactionsColumns){
+function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
     var users = _getUsers();
 
     var BODY_TOP = 2;
@@ -292,11 +390,12 @@ function _configureSummarySheet(summarySheet,transactionsColumns){
     var nameBodyRangeBackgrounds = [];
     for(var ndx in users){
         nameBodyRangeValues.push([users[ndx].display_name])
-        nameBodyRangeBackgrounds.push([COLOR_SWATCHES[ndx % COLOR_SWATCHES.length]])
+        nameBodyRangeBackgrounds.push([COLOR_SWATCHES[(ndx % COLOR_SWATCHES.length) -1]])
     }
     _setHeaderStyle(nameBodyRange);
     nameBodyRange.setValues(nameBodyRangeValues);
     nameBodyRange.setBackgrounds(nameBodyRangeBackgrounds);
+    workbook.setNamedRange('SUMMARY_BODY_NAME',nameBodyRange);
 
     var getsColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Gets');
     var getsBodyRange = summarySheet.getRange(BODY_TOP,getsColumn, BODY_TOP_OFFSET,1);
@@ -317,6 +416,7 @@ function _configureSummarySheet(summarySheet,transactionsColumns){
     var bankerCollectsBodyRange = summarySheet.getRange(BODY_TOP,bankerCollectsColumn, BODY_TOP_OFFSET,1);
     bankerCollectsBodyRange.setFormulaR1C1('=R[0]C[-2] - R[0]C[-1]');
     _setSummaryBodyStyle(bankerCollectsBodyRange);
+    workbook.setNamedRange('SUMMARY_BODY_BANKER_COLLECTS',bankerCollectsBodyRange);
 
     var roundedColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Rounded');
     var roundedBodyRange = summarySheet.getRange(BODY_TOP, roundedColumn, BODY_TOP_OFFSET,1);
@@ -457,4 +557,34 @@ function _isSpreadsheetEmpty(){
         }
     }
     return true
+}
+
+/**
+ * Function will return true if the ranges intersect
+ * @param rangeA
+ * @param rangeB
+ */
+function _rangeIntersect(rangeA, rangeB){
+    var rangeA_row_begin = rangeA.getRow();
+    var rangeA_row_end = rangeA.getLastRow();
+    var rangeA_col_begin = rangeA.getColumn();
+    var rangeA_col_end = rangeA.getLastColumn();
+
+    var rangeB_row_begin = rangeB.getRow();
+    var rangeB_row_end = rangeB.getLastRow();
+    var rangeB_col_begin = rangeB.getColumn();
+    var rangeB_col_end = rangeB.getLastColumn();
+    return ((rangeA_row_begin <= rangeB_row_begin && rangeB_row_begin <= rangeA_row_end) || (rangeB_row_begin <= rangeA_row_begin && rangeA_row_begin <= rangeB_row_end)) &&
+        ((rangeA_col_begin <= rangeB_col_begin && rangeB_col_begin <= rangeA_col_end) || (rangeB_col_begin <= rangeA_col_begin && rangeA_col_begin <= rangeB_col_end))
+
+}
+
+function _getUserColor(username){
+    var user_ndx = _getUsers().indexOf(username);
+    if(user_ndx == -1){
+        return 'white'
+    }
+    else{
+        return COLOR_SWATCHES[(user_ndx % COLOR_SWATCHES.length) -1]
+    }
 }
