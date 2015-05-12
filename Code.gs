@@ -1,12 +1,4 @@
 /**
- * @fileoverview Provides the custom functions DATEADD and DATESUBTRACT and
- * the helper functions that they use.
- */
-
-
-
-
-/**
  * Runs when the add-on is installed.
  */
 function onInstall() {
