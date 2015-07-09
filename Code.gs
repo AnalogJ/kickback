@@ -13,7 +13,6 @@ function onInstall() {
 function onOpen() {
     SpreadsheetApp.getUi().createAddonMenu()
         .addItem('Run Kickback Wizard', 'use')
-        .addItem('Add new traveller', 'add_traveller')
         .addToUi();
 }
 
@@ -112,6 +111,53 @@ function onEdit(e){
 function add_traveller(){
     throw "This function is not avaiable yet.";
 }
+function add_currency(new_currency){
+
+    //add currency
+    _addTripCurrency(new_currency);
+
+    //reconfigure the validation rules with the new sheet
+    var ENTRY_HEADER_LEFT = 1;
+    var currencyColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Currency');
+    var currencyBodyRange = transactionsSheet.getRange(BODY_TOP,currencyColumn, BODY_TOP_OFFSET,1);
+
+
+    var currencies = [];
+    currencies = currencies.concat(_getTripCurrencies())
+    currencies.push(_getUserCurrency());
+    currencies = _unique(currencies);
+    var currencyRule = SpreadsheetApp.newDataValidation()
+        .requireValueInList(currencies, true)
+        .setAllowInvalid(false)
+        .setHelpText('Currency used to pay for this item.')
+        .build();
+    currencyBodyRange.setDataValidation(currencyRule);
+    workbook.setNamedRange('TRANSACTIONS_BODY_CURRENCY',currencyBodyRange);
+
+    throw "This function is not avaiable yet.";
+}
+
+
+function reset(){
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+
+    //delete all sheets.
+    var sheets = workbook.getSheets();
+    if (sheets.length > 2) {
+        for (var ndx = 2; ndx < sheets.length; ndx++) {
+            workbook.deleteSheet(sheets[ndx])
+        }
+    }
+    var emptySheet = workbook.insertSheet('empty', 0);
+
+    //clear sheet settings
+    _clearUserCurrency();
+    _clearUsers();
+    _clearTripCurrencies();
+
+    use();
+}
+
 /**
  * Enables the add-on on for the current spreadsheet (simply by running) and
  * shows a popup informing the user of the new functions that are available.
@@ -128,6 +174,13 @@ function use() {
             .setWidth(500)
             .setHeight(500);
         ui.showModalDialog(html, 'Kickback Wizard');
+
+        ui.createAddonMenu()
+            .addItem('Rerun Kickback Wizard', 'reset')
+            .addItem('Add new traveller', 'add_traveller')
+            .addItem('Add new trip currency', 'add_currency')
+            .addToUi();
+
         return;
     }
     else{
@@ -502,34 +555,29 @@ function _setSummaryBodyStyle(range){
 
 function _getUsers(){
     var documentProperties = PropertiesService.getDocumentProperties();
-    var users_str = documentProperties.getProperty('USERS') || '';
-    return JSON.parse(users_str);
+    var users_str = documentProperties.getProperty('USERS');
+    if(users_str){
+        return  JSON.parse(users_str)
+    }
+    return [];
 }
 
 function _clearUsers(){
     var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('USERS', '');
+    documentProperties.setProperty('USERS', JSON.stringify([]));
 }
 
 function _addUser(username){
     var documentProperties = PropertiesService.getDocumentProperties();
 
-    //send the user an invitation to the sheet.
-    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var users = _getUsers();
+    users.push(username)
+    _setUsers(users);
+}
 
-    //save the user to the document properties.
-    var users_str = documentProperties.getProperty('USERS') || '';
-    var users = [];
-    if(users_str){
-        users = JSON.parse(users_str);
-    }
-
-
-    if(users.indexOf(username) == -1){
-        users.push(username);
-        documentProperties.setProperty('USERS', JSON.stringify(users));
-    }
-
+function  _setUsers(users_array){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    return documentProperties.setProperty('USERS', JSON.stringify(users_array ? _unique(users_array) : []));
 }
 
 function  _getTripCurrencies(){
@@ -541,14 +589,28 @@ function  _getTripCurrencies(){
     return [];
 }
 
+function _clearTripCurrencies(){
+    return documentProperties.setProperty('TRIP_CURRENCIES', JSON.stringify([]));
+}
+
+function _addTripCurrency(currency){
+    var trip_currencies = _getTripCurrencies();
+    trip_currencies.push(currency)
+    _setTripCurrencies(trip_currencies);
+}
+
 function  _setTripCurrencies(currency_array){
     var documentProperties = PropertiesService.getDocumentProperties();
-    return documentProperties.setProperty('TRIP_CURRENCIES', JSON.stringify(currency_array||[]));
+    return documentProperties.setProperty('TRIP_CURRENCIES', JSON.stringify(currency_array ? _unique(currency_array) : []));
 }
 
 function  _getUserCurrency(){
     var documentProperties = PropertiesService.getDocumentProperties();
     return documentProperties.getProperty('USER_CURRENCY') || '';
+}
+
+function _clearUserCurrency(){
+    return documentProperties.setProperty('USER_CURRENCY', '');
 }
 
 function  _setUserCurrency(currency_code){
