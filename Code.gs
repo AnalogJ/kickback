@@ -442,7 +442,7 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
 //*************************************************************************************************
 // Popup/Modal Handlers.
 //*************************************************************************************************
-
+//TODO
 function add_traveller(){
     _addUser('testaddtrav2');
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
@@ -450,11 +450,12 @@ function add_traveller(){
     _configureTransactionsSheet(workbook,transactionsSheet);
 }
 
-function add_traveller_submit(){
+//TODO
+function add_traveller_submit(form_data){
     var data = JSON.parse(form_data);
 
     //add user
-    _addUser(settings["traveller[]"][0])
+    _addUser(data["traveller[]"][0])
 
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -483,7 +484,7 @@ function add_traveller_submit(){
 
     throw "This function is not avaiable yet.";
 }
-
+//TODO
 function add_currency(){
     var ui = SpreadsheetApp.getUi();
     var html = HtmlService.createHtmlOutputFromFile('view.add_currency')
@@ -492,7 +493,7 @@ function add_currency(){
         .setHeight(200);
     ui.showModalDialog(html, 'Kickback Add Currency');
 }
-
+//TODO
 function add_currency_submit(form_data){
     var data = JSON.parse(form_data);
 
