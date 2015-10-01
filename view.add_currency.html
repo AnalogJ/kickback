@@ -17,7 +17,7 @@
             <p>
             <div class=" input-field col s6">
                 <div class=" input-field">
-                    <input name="trip_currencies[]" id="trip_currency_OTHER" placeholder="eg. INR" type="text" class="validate">
+                    <input name="trip_currency" id="trip_currency_OTHER" placeholder="eg. INR" type="text" class="validate">
                     <label for="trip_currency_OTHER">Currency Code</label>
                 </div>
             </div>
@@ -44,8 +44,7 @@
             console.log(JSON.stringify(content));
 
             //validation
-            content['trip_currencies[]'] = $.grep(content['trip_currencies[]'] || [], function(currency) { return !!currency })
-            if(content['trip_currencies[]'].length == 0){
+            if(content['trip_currency'].length == 0){
                 alert('Trip Currency is required');
                 return false;
             }

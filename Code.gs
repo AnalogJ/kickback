@@ -498,7 +498,7 @@ function add_currency_submit(form_data){
     var data = JSON.parse(form_data);
 
     //add currency
-    _addTripCurrency(data['trip_currencies[]']);
+    _addTripCurrency(data['trip_currency']);
 
     //reconfigure the validation rules with the new sheet
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
