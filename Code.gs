@@ -444,10 +444,12 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
 //*************************************************************************************************
 //TODO
 function add_traveller(){
-    _addUser('testaddtrav2');
-    var workbook = SpreadsheetApp.getActiveSpreadsheet();
-    var transactionsSheet = workbook.insertSheet('Transactions', 0);
-    _configureTransactionsSheet(workbook,transactionsSheet);
+    var ui = SpreadsheetApp.getUi();
+    var html = HtmlService.createHtmlOutputFromFile('view.add_traveller')
+        .setSandboxMode(HtmlService.SandboxMode.IFRAME)
+        .setWidth(500)
+        .setHeight(200);
+    ui.showModalDialog(html, 'Kickback Add Traveller');
 }
 
 //TODO
@@ -455,7 +457,7 @@ function add_traveller_submit(form_data){
     var data = JSON.parse(form_data);
 
     //add user
-    _addUser(data["traveller[]"][0])
+    _addUser(data["traveller"])
 
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
 

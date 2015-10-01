@@ -1,0 +1,88 @@
+
+<!-- Compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.96.1/css/materialize.min.css">
+
+<!--Let browser know website is optimized for mobile-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
+<div class="row">
+    <form class="col s12" id="kickback_form">
+
+        <div class="row">
+            <h4>Add Traveller</h4>
+            <p>Enter the name of any missing traveller who will be sharing costs on your trip.<br/>
+            </p>
+            <div id="traveller_name">
+                <div class=" input-field col s12">
+                    <i class="mdi-action-account-circle prefix"></i>
+                    <input name="traveller" id="traveller_0" placeholder="eg. Jason K" type="text" class="validate traveller_name">
+                    <label for="traveller_0">Traveller Name</label>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn_finish" class="btn waves-effect waves-light" type="submit" name="action">Finish
+            <i class="mdi-content-send right"></i>
+        </button>
+    </form>
+</div>
+
+<!--Import jQuery before materialize.js-->
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.96.1/js/materialize.min.js"></script>
+
+
+<script>
+    $(function(){
+        //dom ready
+
+        $('#kickback_form').submit(function(){
+
+            var content = $("#kickback_form").serializeObject();
+            console.log(JSON.stringify(content));
+
+            //validation
+            if(content['traveller'].length == 0){
+                alert('Traveller name is required');
+                return false;
+            }
+
+
+            $('button').attr('disabled', 'disabled').addClass('disabled');
+            $('input').attr('disabled','disabled').addClass('disabled');
+            google.script.run
+                    .withSuccessHandler(
+                    function() {
+                        $('button').attr('disabled','').removeClass('disabled');
+                        $('input').attr('disabled','').removeClass('disabled');
+                        google.script.host.close()
+                    })
+                    .withFailureHandler(
+                    function() {
+                        $('button').attr('disabled','').removeClass('disabled');
+                        $('input').attr('disabled','').removeClass('disabled');
+                    })
+                    .withUserObject(this)
+                    .add_currency_submit(JSON.stringify(content));
+
+            return false;
+        })
+    })
+
+    $.fn.serializeObject = function()
+    {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function() {
+            if (o[this.name] !== undefined) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
+</script>
