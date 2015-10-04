@@ -118,6 +118,15 @@ function _setSummaryRange(keyword, range){
 function _getTransactionRange(keyword){}
 function _getSummaryRange(keyword){}
 
+function _setFlag(flag, value){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    return documentProperties.setProperty(flag,JSON.stringify(value));
+}
+
+function _getFlag(flag){
+    var documentProperties = PropertiesService.getDocumentProperties();
+    return JSON.parse(documentProperties.getProperty(flag));
+}
 //*************************************************************************************************
 // Utility functions
 //*************************************************************************************************

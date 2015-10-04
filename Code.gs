@@ -11,9 +11,20 @@ function onInstall() {
  * current spreadsheet when a function is run.
  */
 function onOpen() {
-    SpreadsheetApp.getUi().createAddonMenu()
-        .addItem('Run Kickback Wizard', 'use')
-        .addToUi();
+
+    if(_getFlag('FLAG_WIZARD_INIT')){
+        SpreadsheetApp.getUi().createAddonMenu()
+            .addItem('Rerun Kickback Wizard', 'reset')
+            .addItem('Add new traveller', 'add_traveller')
+            .addItem('Add new trip currency', 'add_currency')
+            .addToUi();
+    }
+    else{
+        SpreadsheetApp.getUi().createAddonMenu()
+            .addItem('Run Kickback Wizard', 'use')
+            .addToUi();
+    }
+
 }
 
 /**
@@ -125,7 +136,7 @@ function use() {
             .setWidth(500)
             .setHeight(500);
         ui.showModalDialog(html, 'Kickback Wizard');
-
+        _setFlag('FLAG_WIZARD_INIT', true);
         ui.createAddonMenu()
             .addItem('Rerun Kickback Wizard', 'reset')
             .addItem('Add new traveller', 'add_traveller')
