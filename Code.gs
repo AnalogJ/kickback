@@ -467,6 +467,21 @@ function add_traveller(){
 function add_traveller_submit(form_data){
     var data = JSON.parse(form_data);
 
+
+    /*
+    * We have to do the following changes in the Transactions Sheet
+    * - add the user to the users settings
+    * - modify the who paid column validation to include the new user
+    * - add a new user under "Paid For Who" section with a new column + validation
+    * - Update teh Self Pay formula with the new range.
+    * - Update the Ind Paymnet forumen with the new range.
+    * - Update the Payer Collections forumla with the new range.
+    *
+    * We have to make the following changes in the Summary Sheet
+    * - Add a new row with correct formulas.
+    * */
+
+
     //add user
     _addUser(data["traveller"])
 
