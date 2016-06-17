@@ -282,6 +282,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     //set the amount paid validation
     var amountPaidColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid');
     var amountPaidBodyRange = transactionsSheet.getRange(BODY_TOP,amountPaidColumn, BODY_TOP_OFFSET,1);
+    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID',amountPaidBodyRange);
     var amountPaidRule = SpreadsheetApp.newDataValidation()
         .requireNumberGreaterThan(0)
         .setAllowInvalid(false)
@@ -289,20 +290,20 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
         .build();
     amountPaidBodyRange.setDataValidation(amountPaidRule);
     amountPaidBodyRange.setNumberFormat("$0.00");
-    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID',amountPaidBodyRange);
 
 
     //set the amount paid currency conversion
     var amountPaidUserColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid ('+_getUserCurrency()+')');
     var amountPaidUserBodyRange = transactionsSheet.getRange(BODY_TOP,amountPaidUserColumn, BODY_TOP_OFFSET,1);
+    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID_USER',amountPaidUserBodyRange);
     amountPaidUserBodyRange.setNumberFormat("$0.00");
     _setCalculatedBodyStyle(amountPaidUserBodyRange);
 //TODO: look at the google Finanace method and lookup a specific date.
     amountPaidUserBodyRange.setFormulaR1C1('=IF(OR(EQ("'+_getUserCurrency()+'",R[0]C[-2]),ISBLANK(R[0]C[-2])),R[0]C[-1],GOOGLEFINANCE(CONCATENATE("CURRENCY:",R[0]C[-2],"'+_getUserCurrency()+'"))*R[0]C[-1])');
-    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID_USER',amountPaidUserBodyRange);
 
     var whoPaidColumn =  ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Who Paid');
     var whoPaidBodyRange = transactionsSheet.getRange(BODY_TOP,whoPaidColumn, BODY_TOP_OFFSET,1);
+    workbook.setNamedRange('TRANSACTIONS_BODY_WHO_PAID',whoPaidBodyRange);
     var whoPaidRule = SpreadsheetApp.newDataValidation()
         .requireValueInRange(payeeHeaderBottomRange, true)
         .setAllowInvalid(false)
@@ -311,50 +312,45 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     whoPaidBodyRange.setDataValidation(whoPaidRule);
     whoPaidBodyRange.setFontSize(9);
     whoPaidBodyRange.setFontWeight('bold');
-    workbook.setNamedRange('TRANSACTIONS_BODY_WHO_PAID',whoPaidBodyRange);
 
     var paidForColumn = PAYEE_HEADER_LEFT;
     var paidForBodyRange = transactionsSheet.getRange(BODY_TOP,paidForColumn, BODY_TOP_OFFSET,PAYEE_HEADER_LEFT_OFFSET);
+    workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForBodyRange);
     var paidForRule = SpreadsheetApp.newDataValidation()
         .requireValueInList(['Y','YS',''], true)
         .setAllowInvalid(false)
         .setHelpText('When payer pays for themselves, use `YS`')
         .build();
     paidForBodyRange.setDataValidation(paidForRule);
-    workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForBodyRange);
 
-    //R1C1 Formula helper to specify the current row payees
-    var R1C1_CURRENT_ROW_PAYEES_RANGE = 'R[0]C'+PAYEE_HEADER_LEFT+':R[0]C'+(PAYEE_HEADER_LEFT+PAYEE_HEADER_LEFT_OFFSET-1)
 
 //TODO: ask chi why this has to be so complicated, using a simpler version here.
     var selfPayColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Self Pay');
     var selfPayBodyRange = transactionsSheet.getRange(BODY_TOP,selfPayColumn, BODY_TOP_OFFSET,1);
-    selfPayBodyRange.setFormulaR1C1('IF(COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS") > 0, "YS","")');
+    workbook.setNamedRange('TRANSACTIONS_BODY_SELF_PAY',selfPayBodyRange);
+    selfPayBodyRange.setFormulaR1C1(_generateSelfPayFormulaR1C1());
     _setCalculatedBodyStyle(selfPayBodyRange);
     transactionsSheet.autoResizeColumn(selfPayColumn);
-    workbook.setNamedRange('TRANSACTIONS_BODY_SELF_PAY',selfPayBodyRange);
 
 
 
     var indPaymentColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
     var indPaymentBodyRange = transactionsSheet.getRange(BODY_TOP,indPaymentColumn, BODY_TOP_OFFSET,1);
+    workbook.setNamedRange('TRANSACTIONS_BODY_IND_PAYMENT',indPaymentBodyRange);
     //=E3/(COUNTIF(G3:M3,"Y")+COUNTIF(G3:M3,"YS"))
-    indPaymentBodyRange.setFormulaR1C1('=R[0]C'+amountPaidUserColumn+'/MAX((COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")+COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS")),1)')
+    indPaymentBodyRange.setFormulaR1C1(_generateIndPaymentFormulaR1C1());
     indPaymentBodyRange.setNumberFormat("$0.00");
     _setCalculatedBodyStyle(indPaymentBodyRange);
-    workbook.setNamedRange('TRANSACTIONS_BODY_IND_PAYMENT',indPaymentBodyRange);
 
 
     var payerCollectsColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Payer Collects');
     var payerCollectsBodyRange = transactionsSheet.getRange(BODY_TOP,payerCollectsColumn, BODY_TOP_OFFSET,1);
-//TODO: fill this range with a formula
-//TODO: ask chi why this has to be so complicated, using a simpler version here.
+    workbook.setNamedRange('TRANSACTIONS_BODY_PAYER_COLLECTS',payerCollectsBodyRange);
     //=IF(N5="YS",COUNTIF(G5:M5,"Y")*(E5/(COUNTIF(G5:M5,"Y")+1)),E5)
-    payerCollectsBodyRange.setFormulaR1C1('=R[0]C[-1]*COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")')
+    payerCollectsBodyRange.setFormulaR1C1(_generatePayerCollectsFormulaR1C1())
     payerCollectsBodyRange.setFontWeight("bold");
     payerCollectsBodyRange.setNumberFormat("$0.00");
     _setCalculatedBodyStyle(payerCollectsBodyRange);
-    workbook.setNamedRange('TRANSACTIONS_BODY_PAYER_COLLECTS',payerCollectsBodyRange);
 
 
     return {
@@ -454,6 +450,35 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
 }
 
 
+//*************************************************************************************************
+// Column Formula generators
+//*************************************************************************************************
+
+function _generateCurrentRowPayeesRangeFormulaR1C1(){
+    //R1C1 Formula helper to specify the current row payees
+    // var R1C1_CURRENT_ROW_PAYEES_RANGE = 'R[0]C'+PAYEE_HEADER_LEFT+':R[0]C'+(PAYEE_HEADER_LEFT+PAYEE_HEADER_LEFT_OFFSET-1)
+
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var paidForRange = workbook.getRangeByName('TRANSACTIONS_BODY_PAID_FOR');
+    return 'R[0]C'+paidForRange.getColumn()+':R[0]C'+ paidForRange.getLastColumn();
+}
+
+function _generateSelfPayFormulaR1C1(){
+    return 'IF(COUNTIF('+_generateCurrentRowPayeesRangeFormulaR1C1()+',"YS") > 0, "YS","")'
+}
+
+function _generateIndPaymentFormulaR1C1(){
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var amountPaidUserColumn = workbook.getNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID_USER').getColumn();
+
+    var currentRowPayeesRangeFormulaR1C1 =  _generateCurrentRowPayeesRangeFormulaR1C1();
+
+    return '=R[0]C'+amountPaidUserColumn+'/MAX((COUNTIF('+currentRowPayeesRangeFormulaR1C1+',"Y")+COUNTIF('+currentRowPayeesRangeFormulaR1C1+',"YS")),1)'
+}
+
+function _generatePayerCollectsFormulaR1C1(){
+    return '=R[0]C[-1]*COUNTIF('+_generateCurrentRowPayeesRangeFormulaR1C1()+',"Y")'
+}
 
 //*************************************************************************************************
 // Popup/Modal Handlers.
@@ -509,17 +534,38 @@ function add_traveller_submit(form_data){
 
     var paidForRange = workbook.getRangeByName('TRANSACTIONS_BODY_PAID_FOR');
 
-    Logger.log('GETTING PAID FOR RANGE')
-
     //adding a new column at the end of the current paidforrange (paid for range needs to be updated after htis)
     transactionsSheet.insertColumnAfter(paidForRange.getLastColumn());
-    var payeeHeaderTopRange = transactionsSheet.getRange(1,paidForRange.getLastColumn(),1,1);
-    payeeHeaderTopRange.mergeAcross();
+    paidForRange = transactionsSheet.getRange(
+        paidForRange.getRow(),
+        paidForRange.getColumn(),
+        paidForRange.getNumRows(),
+        paidForRange.getNumColumns() + 1
+    );
+    workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForRange);
 
+    //set the value of the new header cell
+    transactionsSheet.getRange(2, paidForRange.getLastColumn()).setValue(data["traveller"]);
+
+    var payeeHeaderTopRange = transactionsSheet.getRange(1, paidForRange.getColumn(), 1, paidForRange.getNumColumns());
+    payeeHeaderTopRange.mergeAcross();
+    _setSubHeaderStyle(payeeHeaderTopRange);
+
+    //update Self Pay formulas
+    var selfPayBodyRange = workbook.getRangeByName('TRANSACTIONS_BODY_SELF_PAY');
+    selfPayBodyRange.setFormulaR1C1(_generateSelfPayFormulaR1C1());
+
+    //update Ind. Payment formulas
+    var indPaymentBodyRange = workbook.getRangeByName('TRANSACTIONS_BODY_IND_PAYMENT');
+    indPaymentBodyRange.setFormulaR1C1(_generateIndPaymentFormulaR1C1());
+
+    //update Payer Collects formulas
+    var payerCollectsBodyRange = workbook.getRangeByName('TRANSACTIONS_BODY_PAYER_COLLECTS');
+    payerCollectsBodyRange.setFormulaR1C1(_generatePayerCollectsFormulaR1C1());
 
     //modify the summary name column with new traveller row
 
-    throw "This function is not avaiable yet.";
+    //throw "This function is not avaiable yet.";
 }
 //TODO
 function add_currency(){
