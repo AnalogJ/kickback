@@ -289,15 +289,17 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
         .build();
     amountPaidBodyRange.setDataValidation(amountPaidRule);
     amountPaidBodyRange.setNumberFormat("$0.00");
-    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID',currencyBodyRange);
+    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID',amountPaidBodyRange);
 
 
     //set the amount paid currency conversion
     var amountPaidUserColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid ('+_getUserCurrency()+')');
     var amountPaidUserBodyRange = transactionsSheet.getRange(BODY_TOP,amountPaidUserColumn, BODY_TOP_OFFSET,1);
     amountPaidUserBodyRange.setNumberFormat("$0.00");
+    _setCalculatedBodyStyle(amountPaidUserBodyRange);
 //TODO: look at the google Finanace method and lookup a specific date.
     amountPaidUserBodyRange.setFormulaR1C1('=IF(OR(EQ("'+_getUserCurrency()+'",R[0]C[-2]),ISBLANK(R[0]C[-2])),R[0]C[-1],GOOGLEFINANCE(CONCATENATE("CURRENCY:",R[0]C[-2],"'+_getUserCurrency()+'"))*R[0]C[-1])');
+    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID_USER',amountPaidUserBodyRange);
 
     var whoPaidColumn =  ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Who Paid');
     var whoPaidBodyRange = transactionsSheet.getRange(BODY_TOP,whoPaidColumn, BODY_TOP_OFFSET,1);
@@ -314,7 +316,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     var paidForColumn = PAYEE_HEADER_LEFT;
     var paidForBodyRange = transactionsSheet.getRange(BODY_TOP,paidForColumn, BODY_TOP_OFFSET,PAYEE_HEADER_LEFT_OFFSET);
     var paidForRule = SpreadsheetApp.newDataValidation()
-        .requireValueInList(['Y','YS'], true)
+        .requireValueInList(['Y','YS',''], true)
         .setAllowInvalid(false)
         .setHelpText('When payer pays for themselves, use `YS`')
         .build();
@@ -328,6 +330,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     var selfPayColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Self Pay');
     var selfPayBodyRange = transactionsSheet.getRange(BODY_TOP,selfPayColumn, BODY_TOP_OFFSET,1);
     selfPayBodyRange.setFormulaR1C1('IF(COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS") > 0, "YS","")');
+    _setCalculatedBodyStyle(selfPayBodyRange);
     transactionsSheet.autoResizeColumn(selfPayColumn);
     workbook.setNamedRange('TRANSACTIONS_BODY_SELF_PAY',selfPayBodyRange);
 
@@ -338,6 +341,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     //=E3/(COUNTIF(G3:M3,"Y")+COUNTIF(G3:M3,"YS"))
     indPaymentBodyRange.setFormulaR1C1('=R[0]C'+amountPaidUserColumn+'/MAX((COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")+COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS")),1)')
     indPaymentBodyRange.setNumberFormat("$0.00");
+    _setCalculatedBodyStyle(indPaymentBodyRange);
     workbook.setNamedRange('TRANSACTIONS_BODY_IND_PAYMENT',indPaymentBodyRange);
 
 
@@ -349,6 +353,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     payerCollectsBodyRange.setFormulaR1C1('=R[0]C[-1]*COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")')
     payerCollectsBodyRange.setFontWeight("bold");
     payerCollectsBodyRange.setNumberFormat("$0.00");
+    _setCalculatedBodyStyle(payerCollectsBodyRange);
     workbook.setNamedRange('TRANSACTIONS_BODY_PAYER_COLLECTS',payerCollectsBodyRange);
 
 
@@ -467,6 +472,8 @@ function add_traveller(){
 function add_traveller_submit(form_data){
     var data = JSON.parse(form_data);
 
+    Logger.log(data);
+
 
     /*
     * We have to do the following changes in the Transactions Sheet
@@ -490,7 +497,7 @@ function add_traveller_submit(form_data){
     //modify the who paid validation rules with new traveller
     var whoPaidRange = workbook.getRangeByName('TRANSACTIONS_BODY_WHO_PAID');
     var whoPaidRule = SpreadsheetApp.newDataValidation()
-        .requireValueInRange(_getUsers(), true)
+        .requireValueInList(_getUsers(), true)
         .setAllowInvalid(false)
         .setHelpText('The user who paid for this item.')
         .build();
@@ -501,6 +508,9 @@ function add_traveller_submit(form_data){
     transactionsSheet.activate();
 
     var paidForRange = workbook.getRangeByName('TRANSACTIONS_BODY_PAID_FOR');
+
+    Logger.log('GETTING PAID FOR RANGE')
+
     //adding a new column at the end of the current paidforrange (paid for range needs to be updated after htis)
     transactionsSheet.insertColumnAfter(paidForRange.getLastColumn());
     var payeeHeaderTopRange = transactionsSheet.getRange(1,paidForRange.getLastColumn(),1,1);
@@ -508,7 +518,6 @@ function add_traveller_submit(form_data){
 
 
     //modify the summary name column with new traveller row
-
 
     throw "This function is not avaiable yet.";
 }
