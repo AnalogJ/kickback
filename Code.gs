@@ -168,8 +168,8 @@ function _populateWorkbook() {
         }
     }
 
-    var transactionsColumns = _configureTransactionsSheet(workbook,transactionsSheet);
-    _configureSummarySheet(workbook,summarySheet,transactionsColumns);
+    _configureTransactionsSheet(workbook,transactionsSheet);
+    _configureSummarySheet(workbook,summarySheet);
     transactionsSheet.activate();
 }
 
@@ -268,7 +268,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
 
 
     var currencies = [];
-    currencies = currencies.concat(_getTripCurrencies())
+    currencies = currencies.concat(_getTripCurrencies());
     currencies.push(_getUserCurrency());
     currencies = _unique(currencies);
     var currencyRule = SpreadsheetApp.newDataValidation()
@@ -332,8 +332,6 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     _setCalculatedBodyStyle(selfPayBodyRange);
     transactionsSheet.autoResizeColumn(selfPayColumn);
 
-
-
     var indPaymentColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
     var indPaymentBodyRange = transactionsSheet.getRange(BODY_TOP,indPaymentColumn, BODY_TOP_OFFSET,1);
     workbook.setNamedRange('TRANSACTIONS_BODY_IND_PAYMENT',indPaymentBodyRange);
@@ -352,16 +350,9 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     payerCollectsBodyRange.setNumberFormat("$0.00");
     _setCalculatedBodyStyle(payerCollectsBodyRange);
 
-
-    return {
-        whoPaidColumn: whoPaidColumn,
-        paidForColumn: paidForColumn,
-        indPaymentColumn: indPaymentColumn,
-        payerCollectsColumn: payerCollectsColumn
-    }
 }
 
-function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
+function _configureSummarySheet(workbook,summarySheet){
     var users = _getUsers();
 
     var BODY_TOP = 2;
@@ -401,7 +392,7 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
     var nameBodyRangeValues = [];
     var nameBodyRangeBackgrounds = [];
     for(var ndx in users){
-        nameBodyRangeValues.push([users[ndx]])
+        nameBodyRangeValues.push([users[ndx]]);
         nameBodyRangeBackgrounds.push([COLOR_SWATCHES[ndx % COLOR_SWATCHES.length]])
     }
     _setHeaderStyle(nameBodyRange);
@@ -412,23 +403,23 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
     var getsColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Gets');
     var getsBodyRange = summarySheet.getRange(BODY_TOP,getsColumn, BODY_TOP_OFFSET,1);
     //=SUMIF(Transactions!F:F,A2,Transactions!P:P)
-    getsBodyRange.setFormulaR1C1('=SUMIF(Transactions!C'+transactionsColumns.whoPaidColumn+':C'+transactionsColumns.whoPaidColumn+', R[0]C[-1], Transactions!C'+transactionsColumns.payerCollectsColumn+':C'+transactionsColumns.payerCollectsColumn+')');
+    getsBodyRange.setFormulaR1C1(_generateGetsFormulaR1C1());
     getsBodyRange.setNumberFormat("$0.00");
-
+    _setCalculatedBodyStyle(getsBodyRange);
 
     var givesColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Gives');
     var givesBodyRange = summarySheet.getRange(BODY_TOP,givesColumn, BODY_TOP_OFFSET,1);
     var formulas = [];
     for(var ndx in users){
-        formulas.push(['=SUMIF(Transactions!C'+(transactionsColumns.paidForColumn+ parseInt(ndx))+':C'+(transactionsColumns.paidForColumn+ parseInt(ndx))+', "Y", Transactions!C'+transactionsColumns.indPaymentColumn+':C'+transactionsColumns.indPaymentColumn+')'])
+        formulas.push([_generateGivesFormulaR1C1(ndx)])
     }
     givesBodyRange.setFormulasR1C1(formulas);
     givesBodyRange.setNumberFormat("$0.00");
-
+    _setCalculatedBodyStyle(givesBodyRange);
 
     var bankerCollectsColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Banker Collects');
     var bankerCollectsBodyRange = summarySheet.getRange(BODY_TOP,bankerCollectsColumn, BODY_TOP_OFFSET,1);
-    bankerCollectsBodyRange.setFormulaR1C1('=R[0]C[-2] - R[0]C[-1]');
+    bankerCollectsBodyRange.setFormulaR1C1(_generateBankerCollectsFormulaR1C1());
     workbook.setNamedRange('SUMMARY_BODY_BANKER_COLLECTS',bankerCollectsBodyRange);
     bankerCollectsBodyRange.setNumberFormat("$0.00");
     bankerCollectsBodyRange.setFontSize(14);
@@ -437,15 +428,17 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
 
     var roundedColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Rounded');
     var roundedBodyRange = summarySheet.getRange(BODY_TOP, roundedColumn, BODY_TOP_OFFSET,1);
-    roundedBodyRange.setFormulaR1C1('=ROUND(R[0]C[-1]/5,0)*5');
+    roundedBodyRange.setFormulaR1C1(_generateRoundedFormulaR1C1());
     roundedBodyRange.setNumberFormat("$0.00");
+    _setCalculatedBodyStyle(roundedBodyRange);
 
     var percentDiffColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('% Difference');
     var percentDiffBodyRange = summarySheet.getRange(BODY_TOP, percentDiffColumn, BODY_TOP_OFFSET,1);
     //=IF(NOT(D4=0),((E4/D4)-1),0)
-    percentDiffBodyRange.setFormulaR1C1('=IF(NOT(R[0]C[-2]=0),((R[0]C[-1]/R[0]C[-2])-1),0)');
-    roundedBodyRange.setFontSize(9)
+    percentDiffBodyRange.setFormulaR1C1(_generateDifferenceFormulaR1C1());
+    percentDiffBodyRange.setFontSize(9);
     percentDiffBodyRange.setNumberFormat("0.00%");
+    _setCalculatedBodyStyle(percentDiffBodyRange);
 
 }
 
@@ -469,7 +462,7 @@ function _generateSelfPayFormulaR1C1(){
 
 function _generateIndPaymentFormulaR1C1(){
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
-    var amountPaidUserColumn = workbook.getNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID_USER').getColumn();
+    var amountPaidUserColumn = workbook.getRangeByName('TRANSACTIONS_BODY_AMOUNT_PAID_USER').getColumn();
 
     var currentRowPayeesRangeFormulaR1C1 =  _generateCurrentRowPayeesRangeFormulaR1C1();
 
@@ -479,6 +472,35 @@ function _generateIndPaymentFormulaR1C1(){
 function _generatePayerCollectsFormulaR1C1(){
     return '=R[0]C[-1]*COUNTIF('+_generateCurrentRowPayeesRangeFormulaR1C1()+',"Y")'
 }
+
+
+function _generateGetsFormulaR1C1(){
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var whoPaidColumn = workbook.getRangeByName('TRANSACTIONS_BODY_WHO_PAID').getColumn();
+    var payerCollectsColumn = workbook.getRangeByName('TRANSACTIONS_BODY_PAYER_COLLECTS').getColumn();
+    return '=SUMIF(Transactions!C'+whoPaidColumn+':C'+whoPaidColumn+', R[0]C[-1], Transactions!C'+payerCollectsColumn+':C'+payerCollectsColumn+')'
+}
+
+function _generateGivesFormulaR1C1(ndx){
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var paidForColumn = workbook.getRangeByName('TRANSACTIONS_BODY_PAID_FOR').getColumn();
+    var indPaymentColumn = workbook.getRangeByName('TRANSACTIONS_BODY_IND_PAYMENT').getColumn();
+
+    return '=SUMIF(Transactions!C'+(paidForColumn+ parseInt(ndx))+':C'+(paidForColumn+ parseInt(ndx))+', "Y", Transactions!C'+indPaymentColumn+':C'+indPaymentColumn+')'
+}
+
+function _generateBankerCollectsFormulaR1C1(){
+    return '=R[0]C[-2] - R[0]C[-1]'
+}
+
+function _generateRoundedFormulaR1C1(){
+    return '=ROUND(R[0]C[-1]/5,0)*5'
+}
+
+function _generateDifferenceFormulaR1C1(){
+    return '=IF(NOT(R[0]C[-2]=0),((R[0]C[-1]/R[0]C[-2])-1),0)'
+}
+
 
 //*************************************************************************************************
 // Popup/Modal Handlers.
@@ -564,9 +586,12 @@ function add_traveller_submit(form_data){
     payerCollectsBodyRange.setFormulaR1C1(_generatePayerCollectsFormulaR1C1());
 
     //modify the summary name column with new traveller row
+    var summarySheet = workbook.getSheetByName("Summary");
+    _configureSummarySheet(workbook, summarySheet);
+    transactionsSheet.activate();
 
-    //throw "This function is not avaiable yet.";
 }
+
 //TODO
 function add_currency(){
     var ui = SpreadsheetApp.getUi();
