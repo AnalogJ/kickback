@@ -131,7 +131,8 @@ function use() {
     if(_isSpreadsheetEmpty()){
 //        ui.alert('Welcome to the Kickback for Google Sheets wizard')
 
-        var html = HtmlService.createHtmlOutputFromFile('view.wizard')
+        var html = HtmlService.createTemplateFromFile('view.wizard')
+            .evaluate()
             .setSandboxMode(HtmlService.SandboxMode.IFRAME)
             .setWidth(500)
             .setHeight(500);
@@ -508,7 +509,8 @@ function _generateDifferenceFormulaR1C1(){
 //TODO
 function add_traveller(){
     var ui = SpreadsheetApp.getUi();
-    var html = HtmlService.createHtmlOutputFromFile('view.add_traveller')
+    var html = HtmlService.createTemplateFromFile('view.add_traveller')
+        .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
         .setHeight(200);
@@ -595,7 +597,8 @@ function add_traveller_submit(form_data){
 //TODO
 function add_currency(){
     var ui = SpreadsheetApp.getUi();
-    var html = HtmlService.createHtmlOutputFromFile('view.add_currency')
+    var html = HtmlService.createTemplateFromFile('view.add_currency')
+        .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
         .setHeight(200);
@@ -645,7 +648,8 @@ function reset(){
     _clearTripCurrencies();
 
     var ui = SpreadsheetApp.getUi();
-    var html = HtmlService.createHtmlOutputFromFile('view.wizard')
+    var html = HtmlService.createTemplateFromFile('view.wizard')
+        .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
         .setHeight(500);

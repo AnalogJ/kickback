@@ -203,3 +203,8 @@ function _getUserColor(username){
         return COLOR_SWATCHES[user_ndx % COLOR_SWATCHES.length]
     }
 }
+//template include function. 
+function include(filename) {
+    return HtmlService.createHtmlOutputFromFile(filename)
+        .getContent();
+}
