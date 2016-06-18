@@ -44,7 +44,7 @@
             These are the currencies you will be spending while traveling. <br/>
             You can select multiple Trip Currencies.<br/>
             <span class="gray">eg. EUR in Europe, CAD in Canada or USD if you're making purchases in the United States</span>
-        <p>
+        </p>
         <div id="trip_currencies">
             <div class=" input-field col s6">
                 <input name="trip_currencies[]" value="USD" type="checkbox" id="trip_currency_USD" />
@@ -107,7 +107,7 @@
         </div>
         <br/>
         <div class="pull-right">
-            <button id="btn_finish" type="submit" class="create">Finish</button>
+            <button id="btn_finish" type="submit" class="create">FINISH</button>
 
         </div>
     </div>
@@ -170,7 +170,7 @@
         $('#kickback_form').submit(function(){
 
             var content = $("#kickback_form").serializeObject();
-            console.log(JSON.stringify(content));
+//            console.log(JSON.stringify(content));
 
             //validation
             content['traveller[]'] = $.grep(content['traveller[]'] || [], function(traveller) { return !!traveller })
