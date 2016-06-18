@@ -36,12 +36,12 @@ function onOpen() {
  * @param e
  */
 function onEdit(e){
-    Logger.log(e)
+    //Logger.log(e)
 
     var currentSheet = e.range.getSheet();
     if(currentSheet.getName() != "Transactions"){
         //we dont care about changes to any sheet other than the Transactions sheet.
-        Logger.log('Current Sheet is not Transactions. Skipping');
+        //Logger.log('Current Sheet is not Transactions. Skipping');
         return;
     }
 
@@ -57,20 +57,20 @@ function onEdit(e){
         _rangeIntersect(e.range,paidForRange)
         )){
         //this edited range does not intesect with a watched range.
-        Logger.log('The edited range does not intesect with a watched range. Skipping.');
+        //Logger.log('The edited range does not intesect with a watched range. Skipping.');
         return;
     }
 
     //Before processing rows, ensure that the rows we process match the row we care about.
     var first_row = Math.max(e.range.getRow(),currencyRange.getRow());
     var last_row = Math.min(e.range.getLastRow(),currencyRange.getLastRow());
-    Logger.log(first_row);
-    Logger.log(last_row);
+    //Logger.log(first_row);
+    //Logger.log(last_row);
 
     for(var row = first_row; row<=last_row; row++){
         //set the background for the currency col.
         var currencyCell = currentSheet.getRange(row, currencyRange.getColumn());
-        Logger.log('Currency cell value:' + currencyCell.getValue());
+        //Logger.log('Currency cell value:' + currencyCell.getValue());
         if(currencyCell.getValue() == _getUserCurrency()){
             //if the currency of this item is the same as the user currency, the background color should be white.
             currencyCell.setBackground('white')
@@ -521,7 +521,7 @@ function add_traveller(){
 function add_traveller_submit(form_data){
     var data = JSON.parse(form_data);
 
-    Logger.log(data);
+    //Logger.log(data);
 
 
     /*
@@ -657,7 +657,7 @@ function reset(){
 }
 
 function wizard_submit(form_data){
-    Logger.log(form_data)
+    //Logger.log(form_data)
 
     var settings = JSON.parse(form_data);
 
