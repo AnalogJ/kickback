@@ -137,12 +137,6 @@ function use() {
             .setWidth(500)
             .setHeight(500);
         ui.showModalDialog(html, 'Kickback Wizard');
-        ui.createAddonMenu()
-            .addItem('Rerun Kickback Wizard', 'reset')
-            .addItem('Add new traveller', 'add_traveller')
-            .addItem('Add new trip currency', 'add_currency')
-            .addToUi();
-
         return;
     }
     else{
@@ -669,4 +663,10 @@ function wizard_submit(form_data){
     }
     _populateWorkbook()
     _setFlag('FLAG_WIZARD_INIT', true);
+    var ui = SpreadsheetApp.getUi();
+    ui.createAddonMenu()
+        .addItem('Rerun Kickback Wizard', 'reset')
+        .addItem('Add new traveller', 'add_traveller')
+        .addItem('Add new trip currency', 'add_currency')
+        .addToUi();
 }
