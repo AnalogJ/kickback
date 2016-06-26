@@ -36,12 +36,12 @@ function onOpen() {
  * @param e
  */
 function onEdit(e){
-    Logger.log(e)
+    //Logger.log(e)
 
     var currentSheet = e.range.getSheet();
     if(currentSheet.getName() != "Transactions"){
         //we dont care about changes to any sheet other than the Transactions sheet.
-        Logger.log('Current Sheet is not Transactions. Skipping');
+        //Logger.log('Current Sheet is not Transactions. Skipping');
         return;
     }
 
@@ -57,20 +57,20 @@ function onEdit(e){
         _rangeIntersect(e.range,paidForRange)
         )){
         //this edited range does not intesect with a watched range.
-        Logger.log('The edited range does not intesect with a watched range. Skipping.');
+        //Logger.log('The edited range does not intesect with a watched range. Skipping.');
         return;
     }
 
     //Before processing rows, ensure that the rows we process match the row we care about.
     var first_row = Math.max(e.range.getRow(),currencyRange.getRow());
     var last_row = Math.min(e.range.getLastRow(),currencyRange.getLastRow());
-    Logger.log(first_row);
-    Logger.log(last_row);
+    //Logger.log(first_row);
+    //Logger.log(last_row);
 
     for(var row = first_row; row<=last_row; row++){
         //set the background for the currency col.
         var currencyCell = currentSheet.getRange(row, currencyRange.getColumn());
-        Logger.log('Currency cell value:' + currencyCell.getValue());
+        //Logger.log('Currency cell value:' + currencyCell.getValue());
         if(currencyCell.getValue() == _getUserCurrency()){
             //if the currency of this item is the same as the user currency, the background color should be white.
             currencyCell.setBackground('white')
@@ -131,7 +131,8 @@ function use() {
     if(_isSpreadsheetEmpty()){
 //        ui.alert('Welcome to the Kickback for Google Sheets wizard')
 
-        var html = HtmlService.createHtmlOutputFromFile('view.wizard')
+        var html = HtmlService.createTemplateFromFile('view.wizard')
+            .evaluate()
             .setSandboxMode(HtmlService.SandboxMode.IFRAME)
             .setWidth(500)
             .setHeight(500);
@@ -168,8 +169,8 @@ function _populateWorkbook() {
         }
     }
 
-    var transactionsColumns = _configureTransactionsSheet(workbook,transactionsSheet);
-    _configureSummarySheet(workbook,summarySheet,transactionsColumns);
+    _configureTransactionsSheet(workbook,transactionsSheet);
+    _configureSummarySheet(workbook,summarySheet);
     transactionsSheet.activate();
 }
 
@@ -268,7 +269,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
 
 
     var currencies = [];
-    currencies = currencies.concat(_getTripCurrencies())
+    currencies = currencies.concat(_getTripCurrencies());
     currencies.push(_getUserCurrency());
     currencies = _unique(currencies);
     var currencyRule = SpreadsheetApp.newDataValidation()
@@ -282,6 +283,7 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     //set the amount paid validation
     var amountPaidColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid');
     var amountPaidBodyRange = transactionsSheet.getRange(BODY_TOP,amountPaidColumn, BODY_TOP_OFFSET,1);
+    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID',amountPaidBodyRange);
     var amountPaidRule = SpreadsheetApp.newDataValidation()
         .requireNumberGreaterThan(0)
         .setAllowInvalid(false)
@@ -289,18 +291,20 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
         .build();
     amountPaidBodyRange.setDataValidation(amountPaidRule);
     amountPaidBodyRange.setNumberFormat("$0.00");
-    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID',currencyBodyRange);
 
 
     //set the amount paid currency conversion
     var amountPaidUserColumn = ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Amount Paid ('+_getUserCurrency()+')');
     var amountPaidUserBodyRange = transactionsSheet.getRange(BODY_TOP,amountPaidUserColumn, BODY_TOP_OFFSET,1);
+    workbook.setNamedRange('TRANSACTIONS_BODY_AMOUNT_PAID_USER',amountPaidUserBodyRange);
     amountPaidUserBodyRange.setNumberFormat("$0.00");
+    _setCalculatedBodyStyle(amountPaidUserBodyRange);
 //TODO: look at the google Finanace method and lookup a specific date.
     amountPaidUserBodyRange.setFormulaR1C1('=IF(OR(EQ("'+_getUserCurrency()+'",R[0]C[-2]),ISBLANK(R[0]C[-2])),R[0]C[-1],GOOGLEFINANCE(CONCATENATE("CURRENCY:",R[0]C[-2],"'+_getUserCurrency()+'"))*R[0]C[-1])');
 
     var whoPaidColumn =  ENTRY_HEADER_LEFT + ENTRY_HEADER_TEXT[0].indexOf('Who Paid');
     var whoPaidBodyRange = transactionsSheet.getRange(BODY_TOP,whoPaidColumn, BODY_TOP_OFFSET,1);
+    workbook.setNamedRange('TRANSACTIONS_BODY_WHO_PAID',whoPaidBodyRange);
     var whoPaidRule = SpreadsheetApp.newDataValidation()
         .requireValueInRange(payeeHeaderBottomRange, true)
         .setAllowInvalid(false)
@@ -309,58 +313,47 @@ function _configureTransactionsSheet(workbook,transactionsSheet){
     whoPaidBodyRange.setDataValidation(whoPaidRule);
     whoPaidBodyRange.setFontSize(9);
     whoPaidBodyRange.setFontWeight('bold');
-    workbook.setNamedRange('TRANSACTIONS_BODY_WHO_PAID',whoPaidBodyRange);
 
     var paidForColumn = PAYEE_HEADER_LEFT;
     var paidForBodyRange = transactionsSheet.getRange(BODY_TOP,paidForColumn, BODY_TOP_OFFSET,PAYEE_HEADER_LEFT_OFFSET);
+    workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForBodyRange);
     var paidForRule = SpreadsheetApp.newDataValidation()
-        .requireValueInList(['Y','YS'], true)
+        .requireValueInList(['Y','YS',''], true)
         .setAllowInvalid(false)
         .setHelpText('When payer pays for themselves, use `YS`')
         .build();
     paidForBodyRange.setDataValidation(paidForRule);
-    workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForBodyRange);
 
-    //R1C1 Formula helper to specify the current row payees
-    var R1C1_CURRENT_ROW_PAYEES_RANGE = 'R[0]C'+PAYEE_HEADER_LEFT+':R[0]C'+(PAYEE_HEADER_LEFT+PAYEE_HEADER_LEFT_OFFSET-1)
 
 //TODO: ask chi why this has to be so complicated, using a simpler version here.
     var selfPayColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Self Pay');
     var selfPayBodyRange = transactionsSheet.getRange(BODY_TOP,selfPayColumn, BODY_TOP_OFFSET,1);
-    selfPayBodyRange.setFormulaR1C1('IF(COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS") > 0, "YS","")');
-    transactionsSheet.autoResizeColumn(selfPayColumn);
     workbook.setNamedRange('TRANSACTIONS_BODY_SELF_PAY',selfPayBodyRange);
-
-
+    selfPayBodyRange.setFormulaR1C1(_generateSelfPayFormulaR1C1());
+    _setCalculatedBodyStyle(selfPayBodyRange);
+    transactionsSheet.autoResizeColumn(selfPayColumn);
 
     var indPaymentColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Ind. Payment');
     var indPaymentBodyRange = transactionsSheet.getRange(BODY_TOP,indPaymentColumn, BODY_TOP_OFFSET,1);
-    //=E3/(COUNTIF(G3:M3,"Y")+COUNTIF(G3:M3,"YS"))
-    indPaymentBodyRange.setFormulaR1C1('=R[0]C'+amountPaidUserColumn+'/MAX((COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")+COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"YS")),1)')
-    indPaymentBodyRange.setNumberFormat("$0.00");
     workbook.setNamedRange('TRANSACTIONS_BODY_IND_PAYMENT',indPaymentBodyRange);
+    //=E3/(COUNTIF(G3:M3,"Y")+COUNTIF(G3:M3,"YS"))
+    indPaymentBodyRange.setFormulaR1C1(_generateIndPaymentFormulaR1C1());
+    indPaymentBodyRange.setNumberFormat("$0.00");
+    _setCalculatedBodyStyle(indPaymentBodyRange);
 
 
     var payerCollectsColumn = PAYMENT_HEADER_LEFT + PAYMENT_HEADER_TEXT[0].indexOf('Payer Collects');
     var payerCollectsBodyRange = transactionsSheet.getRange(BODY_TOP,payerCollectsColumn, BODY_TOP_OFFSET,1);
-//TODO: fill this range with a formula
-//TODO: ask chi why this has to be so complicated, using a simpler version here.
+    workbook.setNamedRange('TRANSACTIONS_BODY_PAYER_COLLECTS',payerCollectsBodyRange);
     //=IF(N5="YS",COUNTIF(G5:M5,"Y")*(E5/(COUNTIF(G5:M5,"Y")+1)),E5)
-    payerCollectsBodyRange.setFormulaR1C1('=R[0]C[-1]*COUNTIF('+R1C1_CURRENT_ROW_PAYEES_RANGE+',"Y")')
+    payerCollectsBodyRange.setFormulaR1C1(_generatePayerCollectsFormulaR1C1())
     payerCollectsBodyRange.setFontWeight("bold");
     payerCollectsBodyRange.setNumberFormat("$0.00");
-    workbook.setNamedRange('TRANSACTIONS_BODY_PAYER_COLLECTS',payerCollectsBodyRange);
+    _setCalculatedBodyStyle(payerCollectsBodyRange);
 
-
-    return {
-        whoPaidColumn: whoPaidColumn,
-        paidForColumn: paidForColumn,
-        indPaymentColumn: indPaymentColumn,
-        payerCollectsColumn: payerCollectsColumn
-    }
 }
 
-function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
+function _configureSummarySheet(workbook,summarySheet){
     var users = _getUsers();
 
     var BODY_TOP = 2;
@@ -400,7 +393,7 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
     var nameBodyRangeValues = [];
     var nameBodyRangeBackgrounds = [];
     for(var ndx in users){
-        nameBodyRangeValues.push([users[ndx]])
+        nameBodyRangeValues.push([users[ndx]]);
         nameBodyRangeBackgrounds.push([COLOR_SWATCHES[ndx % COLOR_SWATCHES.length]])
     }
     _setHeaderStyle(nameBodyRange);
@@ -411,23 +404,23 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
     var getsColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Gets');
     var getsBodyRange = summarySheet.getRange(BODY_TOP,getsColumn, BODY_TOP_OFFSET,1);
     //=SUMIF(Transactions!F:F,A2,Transactions!P:P)
-    getsBodyRange.setFormulaR1C1('=SUMIF(Transactions!C'+transactionsColumns.whoPaidColumn+':C'+transactionsColumns.whoPaidColumn+', R[0]C[-1], Transactions!C'+transactionsColumns.payerCollectsColumn+':C'+transactionsColumns.payerCollectsColumn+')');
+    getsBodyRange.setFormulaR1C1(_generateGetsFormulaR1C1());
     getsBodyRange.setNumberFormat("$0.00");
-
+    _setCalculatedBodyStyle(getsBodyRange);
 
     var givesColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Gives');
     var givesBodyRange = summarySheet.getRange(BODY_TOP,givesColumn, BODY_TOP_OFFSET,1);
     var formulas = [];
     for(var ndx in users){
-        formulas.push(['=SUMIF(Transactions!C'+(transactionsColumns.paidForColumn+ parseInt(ndx))+':C'+(transactionsColumns.paidForColumn+ parseInt(ndx))+', "Y", Transactions!C'+transactionsColumns.indPaymentColumn+':C'+transactionsColumns.indPaymentColumn+')'])
+        formulas.push([_generateGivesFormulaR1C1(ndx)])
     }
     givesBodyRange.setFormulasR1C1(formulas);
     givesBodyRange.setNumberFormat("$0.00");
-
+    _setCalculatedBodyStyle(givesBodyRange);
 
     var bankerCollectsColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Banker Collects');
     var bankerCollectsBodyRange = summarySheet.getRange(BODY_TOP,bankerCollectsColumn, BODY_TOP_OFFSET,1);
-    bankerCollectsBodyRange.setFormulaR1C1('=R[0]C[-2] - R[0]C[-1]');
+    bankerCollectsBodyRange.setFormulaR1C1(_generateBankerCollectsFormulaR1C1());
     workbook.setNamedRange('SUMMARY_BODY_BANKER_COLLECTS',bankerCollectsBodyRange);
     bankerCollectsBodyRange.setNumberFormat("$0.00");
     bankerCollectsBodyRange.setFontSize(14);
@@ -436,18 +429,78 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
 
     var roundedColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('Rounded');
     var roundedBodyRange = summarySheet.getRange(BODY_TOP, roundedColumn, BODY_TOP_OFFSET,1);
-    roundedBodyRange.setFormulaR1C1('=ROUND(R[0]C[-1]/5,0)*5');
+    roundedBodyRange.setFormulaR1C1(_generateRoundedFormulaR1C1());
     roundedBodyRange.setNumberFormat("$0.00");
+    _setCalculatedBodyStyle(roundedBodyRange);
 
     var percentDiffColumn = SUMMARY_HEADER_LEFT + SUMMARY_HEADER_TEXT[0].indexOf('% Difference');
     var percentDiffBodyRange = summarySheet.getRange(BODY_TOP, percentDiffColumn, BODY_TOP_OFFSET,1);
     //=IF(NOT(D4=0),((E4/D4)-1),0)
-    percentDiffBodyRange.setFormulaR1C1('=IF(NOT(R[0]C[-2]=0),((R[0]C[-1]/R[0]C[-2])-1),0)');
-    roundedBodyRange.setFontSize(9)
+    percentDiffBodyRange.setFormulaR1C1(_generateDifferenceFormulaR1C1());
+    percentDiffBodyRange.setFontSize(9);
     percentDiffBodyRange.setNumberFormat("0.00%");
+    _setCalculatedBodyStyle(percentDiffBodyRange);
 
 }
 
+
+//*************************************************************************************************
+// Column Formula generators
+//*************************************************************************************************
+
+function _generateCurrentRowPayeesRangeFormulaR1C1(){
+    //R1C1 Formula helper to specify the current row payees
+    // var R1C1_CURRENT_ROW_PAYEES_RANGE = 'R[0]C'+PAYEE_HEADER_LEFT+':R[0]C'+(PAYEE_HEADER_LEFT+PAYEE_HEADER_LEFT_OFFSET-1)
+
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var paidForRange = workbook.getRangeByName('TRANSACTIONS_BODY_PAID_FOR');
+    return 'R[0]C'+paidForRange.getColumn()+':R[0]C'+ paidForRange.getLastColumn();
+}
+
+function _generateSelfPayFormulaR1C1(){
+    return 'IF(COUNTIF('+_generateCurrentRowPayeesRangeFormulaR1C1()+',"YS") > 0, "YS","")'
+}
+
+function _generateIndPaymentFormulaR1C1(){
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var amountPaidUserColumn = workbook.getRangeByName('TRANSACTIONS_BODY_AMOUNT_PAID_USER').getColumn();
+
+    var currentRowPayeesRangeFormulaR1C1 =  _generateCurrentRowPayeesRangeFormulaR1C1();
+
+    return '=R[0]C'+amountPaidUserColumn+'/MAX((COUNTIF('+currentRowPayeesRangeFormulaR1C1+',"Y")+COUNTIF('+currentRowPayeesRangeFormulaR1C1+',"YS")),1)'
+}
+
+function _generatePayerCollectsFormulaR1C1(){
+    return '=R[0]C[-1]*COUNTIF('+_generateCurrentRowPayeesRangeFormulaR1C1()+',"Y")'
+}
+
+
+function _generateGetsFormulaR1C1(){
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var whoPaidColumn = workbook.getRangeByName('TRANSACTIONS_BODY_WHO_PAID').getColumn();
+    var payerCollectsColumn = workbook.getRangeByName('TRANSACTIONS_BODY_PAYER_COLLECTS').getColumn();
+    return '=SUMIF(Transactions!C'+whoPaidColumn+':C'+whoPaidColumn+', R[0]C[-1], Transactions!C'+payerCollectsColumn+':C'+payerCollectsColumn+')'
+}
+
+function _generateGivesFormulaR1C1(ndx){
+    var workbook = SpreadsheetApp.getActiveSpreadsheet();
+    var paidForColumn = workbook.getRangeByName('TRANSACTIONS_BODY_PAID_FOR').getColumn();
+    var indPaymentColumn = workbook.getRangeByName('TRANSACTIONS_BODY_IND_PAYMENT').getColumn();
+
+    return '=SUMIF(Transactions!C'+(paidForColumn+ parseInt(ndx))+':C'+(paidForColumn+ parseInt(ndx))+', "Y", Transactions!C'+indPaymentColumn+':C'+indPaymentColumn+')'
+}
+
+function _generateBankerCollectsFormulaR1C1(){
+    return '=R[0]C[-2] - R[0]C[-1]'
+}
+
+function _generateRoundedFormulaR1C1(){
+    return '=ROUND(R[0]C[-1]/5,0)*5'
+}
+
+function _generateDifferenceFormulaR1C1(){
+    return '=IF(NOT(R[0]C[-2]=0),((R[0]C[-1]/R[0]C[-2])-1),0)'
+}
 
 
 //*************************************************************************************************
@@ -456,7 +509,8 @@ function _configureSummarySheet(workbook,summarySheet,transactionsColumns){
 //TODO
 function add_traveller(){
     var ui = SpreadsheetApp.getUi();
-    var html = HtmlService.createHtmlOutputFromFile('view.add_traveller')
+    var html = HtmlService.createTemplateFromFile('view.add_traveller')
+        .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
         .setHeight(200);
@@ -466,6 +520,8 @@ function add_traveller(){
 //TODO
 function add_traveller_submit(form_data){
     var data = JSON.parse(form_data);
+
+    //Logger.log(data);
 
 
     /*
@@ -490,7 +546,7 @@ function add_traveller_submit(form_data){
     //modify the who paid validation rules with new traveller
     var whoPaidRange = workbook.getRangeByName('TRANSACTIONS_BODY_WHO_PAID');
     var whoPaidRule = SpreadsheetApp.newDataValidation()
-        .requireValueInRange(_getUsers(), true)
+        .requireValueInList(_getUsers(), true)
         .setAllowInvalid(false)
         .setHelpText('The user who paid for this item.')
         .build();
@@ -501,21 +557,48 @@ function add_traveller_submit(form_data){
     transactionsSheet.activate();
 
     var paidForRange = workbook.getRangeByName('TRANSACTIONS_BODY_PAID_FOR');
+
     //adding a new column at the end of the current paidforrange (paid for range needs to be updated after htis)
     transactionsSheet.insertColumnAfter(paidForRange.getLastColumn());
-    var payeeHeaderTopRange = transactionsSheet.getRange(1,paidForRange.getLastColumn(),1,1);
-    payeeHeaderTopRange.mergeAcross();
+    paidForRange = transactionsSheet.getRange(
+        paidForRange.getRow(),
+        paidForRange.getColumn(),
+        paidForRange.getNumRows(),
+        paidForRange.getNumColumns() + 1
+    );
+    workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForRange);
 
+    //set the value of the new header cell
+    transactionsSheet.getRange(2, paidForRange.getLastColumn()).setValue(data["traveller"]);
+
+    var payeeHeaderTopRange = transactionsSheet.getRange(1, paidForRange.getColumn(), 1, paidForRange.getNumColumns());
+    payeeHeaderTopRange.mergeAcross();
+    _setSubHeaderStyle(payeeHeaderTopRange);
+
+    //update Self Pay formulas
+    var selfPayBodyRange = workbook.getRangeByName('TRANSACTIONS_BODY_SELF_PAY');
+    selfPayBodyRange.setFormulaR1C1(_generateSelfPayFormulaR1C1());
+
+    //update Ind. Payment formulas
+    var indPaymentBodyRange = workbook.getRangeByName('TRANSACTIONS_BODY_IND_PAYMENT');
+    indPaymentBodyRange.setFormulaR1C1(_generateIndPaymentFormulaR1C1());
+
+    //update Payer Collects formulas
+    var payerCollectsBodyRange = workbook.getRangeByName('TRANSACTIONS_BODY_PAYER_COLLECTS');
+    payerCollectsBodyRange.setFormulaR1C1(_generatePayerCollectsFormulaR1C1());
 
     //modify the summary name column with new traveller row
+    var summarySheet = workbook.getSheetByName("Summary");
+    _configureSummarySheet(workbook, summarySheet);
+    transactionsSheet.activate();
 
-
-    throw "This function is not avaiable yet.";
 }
+
 //TODO
 function add_currency(){
     var ui = SpreadsheetApp.getUi();
-    var html = HtmlService.createHtmlOutputFromFile('view.add_currency')
+    var html = HtmlService.createTemplateFromFile('view.add_currency')
+        .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
         .setHeight(200);
@@ -565,7 +648,8 @@ function reset(){
     _clearTripCurrencies();
 
     var ui = SpreadsheetApp.getUi();
-    var html = HtmlService.createHtmlOutputFromFile('view.wizard')
+    var html = HtmlService.createTemplateFromFile('view.wizard')
+        .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
         .setHeight(500);
@@ -573,7 +657,7 @@ function reset(){
 }
 
 function wizard_submit(form_data){
-    Logger.log(form_data)
+    //Logger.log(form_data)
 
     var settings = JSON.parse(form_data);
 

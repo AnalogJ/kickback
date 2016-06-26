@@ -1,115 +1,166 @@
 
-<!-- Compiled and minified CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.96.1/css/materialize.min.css">
+<?!= include('stylesheet'); ?>
+
 
 <!--Let browser know website is optimized for mobile-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 
-<div class="row">
-    <form class="col s12" id="kickback_form">
-        <div class="row">
-            <h4>Travellers</h4>
-            <p>Enter the names of any travellers who will be sharing costs on your trip.<br/>
-                If you forget someone, you can add them later.
-            </p>
-            <div id="traveller_names">
-                <div class=" input-field col s12">
-                    <i class="mdi-action-account-circle prefix"></i>
-                    <input name="traveller[]" id="traveller_0" placeholder="eg. Jason K" type="text" class="validate traveller_name">
-                    <label for="traveller_0">Traveller Name</label>
-                </div>
-            </div>
-            <button id="btn_add_traveller" type="button" class="waves-effect waves-light btn right"><i class="mdi-social-person-add left"></i>Add Traveller</button>
-        </div>
-
-
-        <div class="row">
-            <h4>Trip Currency</h4>
-            <p>
-                This is the currency you will be spending while traveling. <br/>
-                You can have more than one Trip Currency.<br/>
-                eg. EUR in Europe, CAD in Canada or USD if you're making purchases in the United States
-            <p>
-            <div id="trip_currencies">
-                <div class=" input-field col s6">
-                    <input name="trip_currencies[]" value="USD" type="checkbox" id="trip_currency_USD" />
-                    <label for="trip_currency_USD">USD - US Dollar</label>
-                    <br/>
-                    <input name="trip_currencies[]" value="CAD" type="checkbox" id="trip_currency_CAD" />
-                    <label for="trip_currency_CAD">CAD - Canadian Dollar</label>
-                    <br/>
-                    <input name="trip_currencies[]" value="EUR" type="checkbox" id="trip_currency_EUR" />
-                    <label for="trip_currency_EUR">EUR - Euro</label>
-                    <br/>
-                    <input name="trip_currencies[]" value="GBP" type="checkbox" id="trip_currency_GBP" />
-                    <label for="trip_currency_GBP">GBP - British Pound</label>
-                    <br/>
-
-                    <input name="trip_currencies[]" value="AUD" type="checkbox" id="trip_currency_AUD" />
-                    <label for="trip_currency_AUD">AUD - Australian Dollar</label>
-                </div>
-                <div class=" input-field col s6">
-                    <input name="trip_currencies[]" value="SGD" type="checkbox" id="trip_currency_SGD" />
-                    <label for="trip_currency_SGD">SGD - Singapore Dollar</label>
-                    <br/>
-                    <input name="trip_currencies[]" value="CHF" type="checkbox" id="trip_currency_CHF" />
-                    <label for="trip_currency_CHF">CHF - Swiss Franc</label>
-                    <br/>
-                    <input name="trip_currencies[]" value="JPY" type="checkbox" id="trip_currency_JPY" />
-                    <label for="trip_currency_JPY">JPY - Japanese Yen</label>
-                    <br/>
-                    <input name="trip_currencies[]" value="CNY" type="checkbox" id="trip_currency_CNY" />
-                    <label for="trip_currency_CNY">CNY - Chinese Yuan</label>
-
-                </div>
-            </div>
-            <div class=" input-field col s6">
-                <div class=" input-field">
-                    <input name="trip_currencies[]" id="trip_currency_OTHER" placeholder="eg. INR" type="text" class="validate">
-                    <label for="trip_currency_OTHER">Other Currency</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <h4>Traveller's Currency</h4>
-            <p>If/When your fellow travellers pay you back, this is the currency that you pay your expenses with<br/>
-                Eg. If you're a Canadian travelling to the US, your purchases will be in USD, but your credit card bills
-                are in CAD. CAD is your Traveller currency.
-            </p>
-            <div class="input-field col s12">
-                <input name="trav_currency" type="radio" value="USD" id="trav_currency_USD" />
-                <label for="trav_currency_USD">USD - US Dollar</label>
-                <input name="trav_currency" type="radio" value="CAD" id="trav_currency_CAD" />
-                <label for="trav_currency_CAD">CAD - Canadian Dollar</label>
-                <input name="trav_currency" type="radio" value="EUR" id="trav_currency_EUR" />
-                <label for="trav_currency_EUR">EUR - Euro</label>
-
-            </div>
-        </div>
-
-        <button id="btn_finish" class="btn waves-effect waves-light" type="submit" name="action">Finish
-            <i class="mdi-content-send right"></i>
-        </button>
-    </form>
+<div class="wizard">
+    <div class="step" data-step="0">
+        <p for="step-1">Travellers</p>
+        <p for="step-2">Trip Currency</p>
+        <p for="step-3">Traveller Currency</p>
+    </div>
 </div>
 
-<!--Import jQuery before materialize.js-->
-<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.96.1/js/materialize.min.js"></script>
+<br/>
 
+<form id="kickback_form">
+
+    <div id="panel-step-1" class="panel">
+        <h2>Travellers</h2>
+        <p>Enter the names of any travellers who will be sharing costs on your trip.<br/>
+            If you forget someone, you can add them later.
+        </p>
+        <div id="traveller_names">
+            <div class=" input-field col s12">
+                <label for="traveller_0">Name:</label>
+                <input name="traveller[]" id="traveller_0" placeholder="eg. Jason K" type="text" class="validate traveller_name">
+            </div>
+        </div>
+        <br/>
+        <div class="pull-right">
+            <button id="btn_add_traveller" type="button" class>Add Additional Traveller</button>
+            <button id="btn_step_2" type="button" class="action">Next Step</button>
+        </div>
+
+
+    </div>
+
+
+    <div id="panel-step-2" class="panel hidden">
+        <h2>Trip Currencies</h2>
+        <p>
+            These are the currencies you will be spending while traveling. <br/>
+            You can select multiple Trip Currencies.<br/>
+            <span class="gray">eg. EUR in Europe, CAD in Canada or USD if you're making purchases in the United States</span>
+        </p>
+        <div id="trip_currencies">
+            <div class=" input-field col s6">
+                <input name="trip_currencies[]" value="USD" type="checkbox" id="trip_currency_USD" />
+                <label for="trip_currency_USD">USD - US Dollar</label>
+                <br/>
+                <input name="trip_currencies[]" value="CAD" type="checkbox" id="trip_currency_CAD" />
+                <label for="trip_currency_CAD">CAD - Canadian Dollar</label>
+                <br/>
+                <input name="trip_currencies[]" value="EUR" type="checkbox" id="trip_currency_EUR" />
+                <label for="trip_currency_EUR">EUR - Euro</label>
+                <br/>
+                <input name="trip_currencies[]" value="GBP" type="checkbox" id="trip_currency_GBP" />
+                <label for="trip_currency_GBP">GBP - British Pound</label>
+                <br/>
+
+                <input name="trip_currencies[]" value="AUD" type="checkbox" id="trip_currency_AUD" />
+                <label for="trip_currency_AUD">AUD - Australian Dollar</label>
+            </div>
+            <div class=" input-field col s6">
+                <input name="trip_currencies[]" value="SGD" type="checkbox" id="trip_currency_SGD" />
+                <label for="trip_currency_SGD">SGD - Singapore Dollar</label>
+                <br/>
+                <input name="trip_currencies[]" value="CHF" type="checkbox" id="trip_currency_CHF" />
+                <label for="trip_currency_CHF">CHF - Swiss Franc</label>
+                <br/>
+                <input name="trip_currencies[]" value="JPY" type="checkbox" id="trip_currency_JPY" />
+                <label for="trip_currency_JPY">JPY - Japanese Yen</label>
+                <br/>
+                <input name="trip_currencies[]" value="CNY" type="checkbox" id="trip_currency_CNY" />
+                <label for="trip_currency_CNY">CNY - Chinese Yuan</label>
+
+            </div>
+        </div>
+        <div class=" input-field col s6">
+            <div class=" input-field">
+                <input name="trip_currencies[]" id="trip_currency_OTHER" placeholder="eg. INR" type="text" class="validate">
+                <label for="trip_currency_OTHER">Other <a href="https://developers.google.com/adsense/management/appendix/currencies" target="blank">Currency Code</a></label>
+            </div>
+        </div>
+
+        <br/>
+        <div class="pull-right">
+            <button id="btn_step_3" type="button" class="action">Next Step</button>
+        </div>
+    </div>
+    <div id="panel-step-3" class="panel hidden">
+        <h2>Traveller's Currency</h2>
+        <p>When your fellow travellers pay you back, this is the currency that you pay your expenses with<br/>
+            <span class="gray">Eg. If you're a Canadian travelling to the US, your purchases will be in USD, but your credit card bills
+            are in CAD. CAD is your Traveller currency.</span>
+        </p>
+        <div class="input-field col s12">
+            <input name="trav_currency" type="radio" value="USD" id="trav_currency_USD" />
+            <label for="trav_currency_USD">USD - US Dollar</label>
+            <input name="trav_currency" type="radio" value="CAD" id="trav_currency_CAD" />
+            <label for="trav_currency_CAD">CAD - Canadian Dollar</label>
+            <input name="trav_currency" type="radio" value="EUR" id="trav_currency_EUR" />
+            <label for="trav_currency_EUR">EUR - Euro</label>
+
+        </div>
+        <br/>
+        <div class="pull-right">
+            <button id="btn_finish" type="submit" class="create">FINISH</button>
+
+        </div>
+    </div>
+
+</form>
+
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 
 <script>
     $(function(){
-        //dom ready
+
+
+
+        var $container = $('.wizard .step');
+        var $p = $container.find('p');
+        var $panels = $('.panel');
+        var currentIndex = 0;
+
+
+        $p.on('click', function (e) {
+            var $current = $(e.currentTarget);
+            var index = $p.index($current);
+            changePanel(index)
+        });
+
+        function changePanel(index){
+            if (index > currentIndex) {
+                $container.addClass('forward');
+            } else {
+                $container.removeClass('forward');
+            }
+            currentIndex = index;
+            $container.attr('data-step', index);
+
+            $panels.addClass('hidden');
+            $('#panel-step-'+(currentIndex+1)).removeClass('hidden')
+        }
+
+        $('#btn_step_2').click(function(){
+            changePanel(1)
+        });
+        $('#btn_step_3').click(function(){
+            changePanel(2)
+        });
+
         $('#btn_add_traveller').click(function(){
             var count = $('#traveller_names').children().length;
             $('#traveller_names').append(
                     '<div id="traveller_names">'+
                     '<div class=" input-field col s12">'+
-                    '<i class="mdi-action-account-circle prefix"></i>'+
+                    '<label for="traveller_'+count+'">Name:</label>\n'+
                     '<input name="traveller[]" id="traveller_'+count+'" placeholder="eg. Jason K" type="text" class="validate traveller_name">'+
-                    '<label for="traveller_'+count+'">Traveller Name</label>'+
                     '</div>'+
                     '</div>'
             );
@@ -119,7 +170,7 @@
         $('#kickback_form').submit(function(){
 
             var content = $("#kickback_form").serializeObject();
-            console.log(JSON.stringify(content));
+//            console.log(JSON.stringify(content));
 
             //validation
             content['traveller[]'] = $.grep(content['traveller[]'] || [], function(traveller) { return !!traveller })
@@ -138,8 +189,6 @@
                 alert('Traveller\'s Currency is required');
                 return false;
             }
-
-
 
             $('button').attr('disabled', 'disabled').addClass('disabled');
             $('input').attr('disabled','disabled').addClass('disabled');

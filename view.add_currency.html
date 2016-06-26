@@ -1,37 +1,34 @@
 
-<!-- Compiled and minified CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.96.1/css/materialize.min.css">
+<?!= include('stylesheet'); ?>
+
 
 <!--Let browser know website is optimized for mobile-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 
-<div class="row">
-    <form class="col s12" id="kickback_form">
+<form id="kickback_form">
 
-        <div class="row">
-            <h4>Add Trip Currency</h4>
-            <p>
-                This is a currency you will be spending while traveling. <br/>
-                You can have more than one Trip Currency.<br/>
-                eg. EUR in Europe, CAD in Canada or USD if you're making purchases in the United States
-            <p>
-            <div class=" input-field col s6">
-                <div class=" input-field">
-                    <input name="trip_currency" id="trip_currency_OTHER" placeholder="eg. INR" type="text" class="validate">
-                    <label for="trip_currency_OTHER">Currency Code</label>
-                </div>
+    <div>
+        <p>
+            This is a currency you will be spending while traveling. <br/>
+            You can have more than one Trip Currency.<br/>
+            <span class="gray">eg. EUR in Europe, CAD in Canada or USD if you're making purchases in the United States</span>
+        </p>
+        <div class=" input-field col s6">
+            <div class=" input-field">
+                <input name="trip_currency" id="trip_currency_OTHER" placeholder="eg. INR" type="text" class="validate">
+                <label for="trip_currency_OTHER">Supported <a href="https://developers.google.com/adsense/management/appendix/currencies" target="blank">Currency Codes</a></label>
             </div>
         </div>
+    </div>
 
-        <button id="btn_finish" class="btn waves-effect waves-light" type="submit" name="action">Finish
-            <i class="mdi-content-send right"></i>
-        </button>
-    </form>
-</div>
+    <br/>
+    <div class="pull-right">
+        <button id="btn_finish" class="create" type="submit">ADD CURRENCY</button>
+    </div>
+</form>
 
-<!--Import jQuery before materialize.js-->
+<!--Import jQuery-->
 <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.96.1/js/materialize.min.js"></script>
 
 
 <script>
@@ -41,7 +38,7 @@
         $('#kickback_form').submit(function(){
 
             var content = $("#kickback_form").serializeObject();
-            console.log(JSON.stringify(content));
+//            console.log(JSON.stringify(content));
 
             //validation
             if(content['trip_currency'].length == 0){

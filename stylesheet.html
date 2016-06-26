@@ -1,0 +1,116 @@
+<!-- http://codepen.io/Hiswe/pen/XJOGog -->
+<style>
+    /*body {*/
+        /*background: #eee;*/
+        /*font-family: Helvetica, sans-serif;*/
+        /*margin: 0;*/
+    /*}*/
+    .wizard .step {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-pack: justify;
+        -webkit-justify-content: space-between;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        counter-reset: step;
+        margin: 2em;
+        position: relative;
+    }
+    .wizard .step::before,
+    .wizard .step::after {
+        content: '';
+        position: absolute;
+        top: 0.75em;
+        bottom: 0.75em;
+        left: 0;
+        right: 0;
+        background: #ccc;
+    }
+    .wizard .step::after {
+        background: #458be3;
+        -webkit-transition: right 0.5s;
+        transition: right 0.5s;
+    }
+    .wizard .step[data-step="0"]::after {
+        right: 100%;
+    }
+    .wizard .step[data-step="1"]::after {
+        right: 50%;
+    }
+    .wizard input {
+        display: none;
+    }
+    .wizard p {
+        counter-increment: step;
+        color: #aaa;
+        height: 2em;
+        position: relative;
+        z-index: 2;
+        cursor: pointer;
+        margin: 0;
+    }
+    .wizard p:first-of-type {
+        background: -webkit-linear-gradient(left, #ffffff 50%, transparent 50%);
+        background: linear-gradient(to right, #ffffff 50%, transparent 50%);
+    }
+    .wizard p:last-of-type {
+        background: -webkit-linear-gradient(left, transparent 50%, #ffffff 50%);
+        background: linear-gradient(to right, transparent 50%, #ffffff 50%);
+    }
+    .wizard p::before {
+        content: counter(step);
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        margin: 0 auto 0.5em;
+        height: 2em;
+        width: 2em;
+        border-radius: 2em;
+        -webkit-box-pack: center;
+        -webkit-justify-content: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -webkit-align-items: center;
+        -ms-flex-align: center;
+        align-items: center;
+        background: #ccc;
+    }
+    .forward .wizard p::before {
+        -webkit-transition: background 0 0.5s, color 0 0.5s;
+        transition: background 0 0.5s, color 0 0.5s;
+    }
+    .wizard [data-step="0"] p:nth-child(1),
+    .wizard [data-step="1"] p:nth-child(2),
+    .wizard [data-step="2"] p:nth-child(3) {
+        color: #000;
+    }
+    .wizard [data-step="1"] p:nth-child(1)::before,
+    .wizard [data-step="2"] p:nth-child(1)::before,
+    .wizard [data-step="2"] p:nth-child(2)::before {
+        content: '✔︎';
+    }
+    .wizard [data-step="0"] p:nth-child(1)::before,
+    .wizard [data-step="1"] p:nth-child(2)::before,
+    .wizard [data-step="2"] p:nth-child(3)::before,
+    .wizard [data-step="1"] p:nth-child(1)::before,
+    .wizard [data-step="2"] p:nth-child(1)::before,
+    .wizard [data-step="2"] p:nth-child(2)::before {
+        background: #458be3;
+        color: #fff;
+    }
+    .hidden {
+        display:none;
+    }
+
+    .pull-right {
+        float: right;
+    }
+
+</style>
+
+<!-- Compiled and minified CSS -->
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
