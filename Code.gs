@@ -654,12 +654,12 @@ function wizard_submit(form_data){
 
     var settings = JSON.parse(form_data);
 
-    _setTripCurrencies(settings['trip_currencies[]']);
-    _setUserCurrency(settings['trav_currency']);
+    _setTripCurrencies(settings['purchase_currencies']);
+    _setUserCurrency(settings['payout_currency']);
 
     _clearUsers()
-    for(var ndx in settings["traveller[]"]){
-        _addUser(settings["traveller[]"][ndx]);
+    for(var ndx in settings["travellers"]){
+        _addUser(settings["travellers"][ndx]);
     }
     _populateWorkbook()
     _setFlag('FLAG_WIZARD_INIT', true);
