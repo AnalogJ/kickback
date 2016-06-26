@@ -137,7 +137,6 @@ function use() {
             .setWidth(500)
             .setHeight(500);
         ui.showModalDialog(html, 'Kickback Wizard');
-        _setFlag('FLAG_WIZARD_INIT', true);
         ui.createAddonMenu()
             .addItem('Rerun Kickback Wizard', 'reset')
             .addItem('Add new traveller', 'add_traveller')
@@ -669,4 +668,5 @@ function wizard_submit(form_data){
         _addUser(settings["traveller[]"][ndx]);
     }
     _populateWorkbook()
+    _setFlag('FLAG_WIZARD_INIT', true);
 }
