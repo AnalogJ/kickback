@@ -15,7 +15,7 @@
 
 <br/>
 
-<div id="error_messages"></div>
+<div class="alert alert-danger hidden" id="error_messages"></div>
 
 <form id="kickback_form">
 
@@ -82,7 +82,7 @@
         </div>
         <div class=" input-field col s6">
             <div class=" input-field">
-                <input name="purchase_currencies" id="trip_currency_OTHER" placeholder="eg. INR" type="text" class="validate">
+                <input name="purchase_currencies" id="trip_currency_OTHER" placeholder="eg. INR" type="text">
                 <label for="trip_currency_OTHER">Other <a href="https://developers.google.com/adsense/management/appendix/currencies" target="blank">Currency Code</a></label>
             </div>
         </div>
@@ -109,6 +109,16 @@
             <label for="payout_currency_EUR">EUR - Euro</label>
             <br/>
 
+        </div>
+        <div class=" input-field col s6">
+            <div class=" input-field">
+                <input name="payout_currency" type="radio" value="" id="payout_currency_OTHER" />
+                <label for="payout_currency_OTHER">
+                    <input name="payout_currency_code" id="payout_currency_code_OTHER" placeholder="eg. INR" type="text">
+                    Other <a href="https://developers.google.com/adsense/management/appendix/currencies" target="blank">Currency Code</a>
+                </label>
+
+            </div>
         </div>
         <br/>
         <div class="pull-right">
@@ -173,6 +183,11 @@
             $('#traveller_'+count+'').focus();
         });
 
+        //if a user clicks on the text box, select the associated Other radio button.
+        $('#payout_currency_code_OTHER').focus(function(){
+            $("#payout_currency_OTHER").prop("checked", true)
+        });
+
         var constraints = {
             'travellers': {
                 presence: true,
@@ -203,7 +218,19 @@
             var validate_results = validate(content, constraints);
             if(validate_results){
 //                console.log('VALIDATE RESULTS:', JSON.stringify(validate_results));
-                $('#error_messages').html(JSON.stringify(validate_results));
+                var error_list = $('<ul>');
+                for(var key in validate_results){
+                    var errors_for_key = validate_results[key]
+                    for(var ndx in errors_for_key){
+                        var error_message = errors_for_key[ndx]
+                        error_list.append('<li>'+ error_message + '</li>')
+                    }
+                }
+
+                if($('#error_messages').hasClass('hidden')){
+                    $('#error_messages').removeClass('hidden');
+                }
+                $('#error_messages').html(error_list);
                 return false;
             }
 
