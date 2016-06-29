@@ -622,6 +622,20 @@ function add_currency_submit(form_data){
 
 
 function reset(){
+    var ui = SpreadsheetApp.getUi(); // Same variations.
+
+    var result = ui.alert(
+        'Please confirm',
+        'Are you sure you want to re-run the Kickback wizard? All data will be lost',
+        ui.ButtonSet.YES_NO);
+
+    // Process the user's response.
+    if (result != ui.Button.YES) {
+        // User clicked "No" or X in the title bar.
+        return
+    }
+    // User clicked "Yes", continue wiping the worksheet.
+
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
 
     //delete all sheets.

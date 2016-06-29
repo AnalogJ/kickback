@@ -226,3 +226,7 @@ function showAlert(title, message) {
     //     ui.alert('Permission denied.');
     // }
 }
+
+
+//http://www.localeplanet.com/api/auto/currencymap.json
+//https://stackoverflow.com/questions/19373860/convert-currency-names-to-currency-symbol
