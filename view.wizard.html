@@ -211,14 +211,12 @@
 
             //cleanup
             content['travellers'] = ($.isArray(content['travellers']) ? $.grep(content['travellers'] || [], function(traveller) { return !!traveller }) : [content['travellers']]);
-            content['purchase_currencies'] = $.grep(content['purchase_currencies'] || [], function(currency) { return !!currency });
+            content['purchase_currencies'] = ($.isArray(content['purchase_currencies']) ? $.grep(content['purchase_currencies'] || [], function(currency) { return !!currency }) : [content['purchase_currencies']]);
             if(content['payout_currency'] == '' && content['payout_currency_code']){
                 //set the payout currency to the code.
                 content['payout_currency'] = content['payout_currency_code']
             }
             delete content['payout_currency_code'];
-
-//            console.log('AFTER',JSON.stringify(content));
 
             var validate_results = validate(content, constraints);
             if(validate_results){
@@ -258,7 +256,7 @@
 
             return false;
         })
-    })
+    });
 
     $.fn.serializeObject = function()
     {

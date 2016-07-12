@@ -506,7 +506,7 @@ function add_traveller(){
         .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
-        .setHeight(200);
+        .setHeight(300);
     ui.showModalDialog(html, 'Kickback Add Traveller');
 }
 
@@ -532,7 +532,7 @@ function add_traveller_submit(form_data){
 
 
     //add user
-    _addUser(data["traveller"])
+    _addUser(data["traveller"]);
 
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -594,7 +594,7 @@ function add_currency(){
         .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
-        .setHeight(200);
+        .setHeight(300);
     ui.showModalDialog(html, 'Kickback Add Currency');
 }
 //TODO
