@@ -85,6 +85,7 @@ function  _setUsers(users_array){
 
 //TRIP_CURRENCIES Storage
 function _addTripCurrency(currency){
+//TODO, only add a trip currency if it doesnt already exist.
     var trip_currencies = _getTripCurrencies();
     trip_currencies.push(currency)
     _setTripCurrencies(trip_currencies);

@@ -561,8 +561,15 @@ function add_traveller_submit(form_data){
     );
     workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForRange);
 
+    //reset styles/size the columns of the paid for bottom header
+    var payeeHeaderBotRange  = transactionsSheet.getRange(2, paidForRange.getColumn(), 1, paidForRange.getNumColumns());
+    _setSubHeaderStyle(payeeHeaderBotRange);
+
     //set the value of the new header cell
     transactionsSheet.getRange(2, paidForRange.getLastColumn()).setValue(data["traveller"]);
+
+    //set the size of the new column in the paid for section
+    transactionsSheet.autoResizeColumn(paidForRange.getLastColumn());
 
     var payeeHeaderTopRange = transactionsSheet.getRange(1, paidForRange.getColumn(), 1, paidForRange.getNumColumns());
     payeeHeaderTopRange.mergeAcross();
