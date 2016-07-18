@@ -8,12 +8,14 @@
 <div class="wizard">
     <div class="step" data-step="0">
         <p for="step-1">Travellers</p>
-        <p for="step-2">Trip Currency</p>
-        <p for="step-3">Traveller Currency</p>
+        <p for="step-2">Purchase</p>
+        <p for="step-3">Payout</p>
     </div>
 </div>
 
 <br/>
+
+<div class="alert alert-danger hidden" id="error_messages"></div>
 
 <form id="kickback_form">
 
@@ -25,7 +27,7 @@
         <div id="traveller_names">
             <div class=" input-field col s12">
                 <label for="traveller_0">Name:</label>
-                <input name="traveller[]" id="traveller_0" placeholder="eg. Jason K" type="text" class="validate traveller_name">
+                <input name="travellers" id="traveller_0" placeholder="eg. Jason K" type="text" class="validate traveller_name">
             </div>
         </div>
         <br/>
@@ -39,48 +41,48 @@
 
 
     <div id="panel-step-2" class="panel hidden">
-        <h2>Trip Currencies</h2>
+        <h2>Purchase Currencies</h2>
         <p>
             These are the currencies you will be spending while traveling. <br/>
-            You can select multiple Trip Currencies.<br/>
+            You can select multiple Currencies.<br/>
             <span class="gray">eg. EUR in Europe, CAD in Canada or USD if you're making purchases in the United States</span>
         </p>
         <div id="trip_currencies">
             <div class=" input-field col s6">
-                <input name="trip_currencies[]" value="USD" type="checkbox" id="trip_currency_USD" />
+                <input name="purchase_currencies" value="USD" type="checkbox" id="trip_currency_USD" />
                 <label for="trip_currency_USD">USD - US Dollar</label>
                 <br/>
-                <input name="trip_currencies[]" value="CAD" type="checkbox" id="trip_currency_CAD" />
+                <input name="purchase_currencies" value="CAD" type="checkbox" id="trip_currency_CAD" />
                 <label for="trip_currency_CAD">CAD - Canadian Dollar</label>
                 <br/>
-                <input name="trip_currencies[]" value="EUR" type="checkbox" id="trip_currency_EUR" />
+                <input name="purchase_currencies" value="EUR" type="checkbox" id="trip_currency_EUR" />
                 <label for="trip_currency_EUR">EUR - Euro</label>
                 <br/>
-                <input name="trip_currencies[]" value="GBP" type="checkbox" id="trip_currency_GBP" />
+                <input name="purchase_currencies" value="GBP" type="checkbox" id="trip_currency_GBP" />
                 <label for="trip_currency_GBP">GBP - British Pound</label>
                 <br/>
 
-                <input name="trip_currencies[]" value="AUD" type="checkbox" id="trip_currency_AUD" />
+                <input name="purchase_currencies" value="AUD" type="checkbox" id="trip_currency_AUD" />
                 <label for="trip_currency_AUD">AUD - Australian Dollar</label>
             </div>
             <div class=" input-field col s6">
-                <input name="trip_currencies[]" value="SGD" type="checkbox" id="trip_currency_SGD" />
+                <input name="purchase_currencies" value="SGD" type="checkbox" id="trip_currency_SGD" />
                 <label for="trip_currency_SGD">SGD - Singapore Dollar</label>
                 <br/>
-                <input name="trip_currencies[]" value="CHF" type="checkbox" id="trip_currency_CHF" />
+                <input name="purchase_currencies" value="CHF" type="checkbox" id="trip_currency_CHF" />
                 <label for="trip_currency_CHF">CHF - Swiss Franc</label>
                 <br/>
-                <input name="trip_currencies[]" value="JPY" type="checkbox" id="trip_currency_JPY" />
+                <input name="purchase_currencies" value="JPY" type="checkbox" id="trip_currency_JPY" />
                 <label for="trip_currency_JPY">JPY - Japanese Yen</label>
                 <br/>
-                <input name="trip_currencies[]" value="CNY" type="checkbox" id="trip_currency_CNY" />
+                <input name="purchase_currencies" value="CNY" type="checkbox" id="trip_currency_CNY" />
                 <label for="trip_currency_CNY">CNY - Chinese Yuan</label>
 
             </div>
         </div>
         <div class=" input-field col s6">
             <div class=" input-field">
-                <input name="trip_currencies[]" id="trip_currency_OTHER" placeholder="eg. INR" type="text" class="validate">
+                <input name="purchase_currencies" id="trip_currency_OTHER" placeholder="eg. INR" type="text">
                 <label for="trip_currency_OTHER">Other <a href="https://developers.google.com/adsense/management/appendix/currencies" target="blank">Currency Code</a></label>
             </div>
         </div>
@@ -91,19 +93,32 @@
         </div>
     </div>
     <div id="panel-step-3" class="panel hidden">
-        <h2>Traveller's Currency</h2>
+        <h2>Payout Currency</h2>
         <p>When your fellow travellers pay you back, this is the currency that you pay your expenses with<br/>
             <span class="gray">Eg. If you're a Canadian travelling to the US, your purchases will be in USD, but your credit card bills
-            are in CAD. CAD is your Traveller currency.</span>
+            are in CAD. CAD is your Payout currency.</span>
         </p>
         <div class="input-field col s12">
-            <input name="trav_currency" type="radio" value="USD" id="trav_currency_USD" />
-            <label for="trav_currency_USD">USD - US Dollar</label>
-            <input name="trav_currency" type="radio" value="CAD" id="trav_currency_CAD" />
-            <label for="trav_currency_CAD">CAD - Canadian Dollar</label>
-            <input name="trav_currency" type="radio" value="EUR" id="trav_currency_EUR" />
-            <label for="trav_currency_EUR">EUR - Euro</label>
+            <input name="payout_currency" type="radio" value="USD" id="payout_currency_USD" />
+            <label for="payout_currency_USD">USD - US Dollar</label>
+            <br/>
+            <input name="payout_currency" type="radio" value="CAD" id="payout_currency_CAD" />
+            <label for="payout_currency_CAD">CAD - Canadian Dollar</label>
+            <br/>
+            <input name="payout_currency" type="radio" value="EUR" id="payout_currency_EUR" />
+            <label for="payout_currency_EUR">EUR - Euro</label>
+            <br/>
 
+        </div>
+        <div class=" input-field col s6">
+            <div class=" input-field">
+                <input name="payout_currency" type="radio" value="" id="payout_currency_OTHER" />
+                <label for="payout_currency_OTHER">
+                    <input name="payout_currency_code" id="payout_currency_code_OTHER" placeholder="eg. INR" type="text">
+                    Other <a href="https://developers.google.com/adsense/management/appendix/currencies" target="blank">Currency Code</a>
+                </label>
+
+            </div>
         </div>
         <br/>
         <div class="pull-right">
@@ -116,6 +131,7 @@
 
 
 <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/validate.js/0.10.0/validate.min.js"></script>
 
 <script>
     $(function(){
@@ -160,33 +176,64 @@
                     '<div id="traveller_names">'+
                     '<div class=" input-field col s12">'+
                     '<label for="traveller_'+count+'">Name:</label>\n'+
-                    '<input name="traveller[]" id="traveller_'+count+'" placeholder="eg. Jason K" type="text" class="validate traveller_name">'+
+                    '<input name="travellers" id="traveller_'+count+'" placeholder="eg. Jason K" type="text" class="validate traveller_name">'+
                     '</div>'+
                     '</div>'
             );
             $('#traveller_'+count+'').focus();
         });
 
+        //if a user clicks on the text box, select the associated Other radio button.
+        $('#payout_currency_code_OTHER').focus(function(){
+            $("#payout_currency_OTHER").prop("checked", true)
+        });
+
+        var constraints = {
+            'travellers': {
+                presence: true,
+                length: {
+                    minimum: 2,
+                    tooShort: "needs to have %{count} or more names"
+                }
+            },
+            'purchase_currencies': {
+                presence: true
+            },
+            'payout_currency': {
+                presence: true
+            }
+        };
+
+
         $('#kickback_form').submit(function(){
 
             var content = $("#kickback_form").serializeObject();
-//            console.log(JSON.stringify(content));
 
-            //validation
-            content['traveller[]'] = $.grep(content['traveller[]'] || [], function(traveller) { return !!traveller })
-            if(content['traveller[]'].length < 2 ){
-                alert('Atleast two Travellers are required');
-                return false;
+            //cleanup
+            content['travellers'] = ($.isArray(content['travellers']) ? $.grep(content['travellers'] || [], function(traveller) { return !!traveller }) : [content['travellers']]);
+            content['purchase_currencies'] = ($.isArray(content['purchase_currencies']) ? $.grep(content['purchase_currencies'] || [], function(currency) { return !!currency }) : [content['purchase_currencies']]);
+            if(content['payout_currency'] == '' && content['payout_currency_code']){
+                //set the payout currency to the code.
+                content['payout_currency'] = content['payout_currency_code']
             }
+            delete content['payout_currency_code'];
 
-            content['trip_currencies[]'] = $.grep(content['trip_currencies[]'] || [], function(currency) { return !!currency })
-            if(content['trip_currencies[]'].length == 0){
-                alert('Trip Currency is required');
-                return false;
-            }
+            var validate_results = validate(content, constraints);
+            if(validate_results){
+//                console.log('VALIDATE RESULTS:', JSON.stringify(validate_results));
+                var error_list = $('<ul>');
+                for(var key in validate_results){
+                    var errors_for_key = validate_results[key]
+                    for(var ndx in errors_for_key){
+                        var error_message = errors_for_key[ndx]
+                        error_list.append('<li>'+ error_message + '</li>')
+                    }
+                }
 
-            if(!content.trav_currency){
-                alert('Traveller\'s Currency is required');
+                if($('#error_messages').hasClass('hidden')){
+                    $('#error_messages').removeClass('hidden');
+                }
+                $('#error_messages').html(error_list);
                 return false;
             }
 
@@ -209,7 +256,7 @@
 
             return false;
         })
-    })
+    });
 
     $.fn.serializeObject = function()
     {

@@ -3,5 +3,5 @@
   "short_description":"Kickback generates a Spreadsheet that can be used to easily split trip/travel expenses between friends.",
   "version": "Initial version",
   "help_link": "https://github.com/AnalogJ/kickback/issues"
-  "instructions": "Kickback has been added to the Addon's menu. You should see a 'Run Kickback Wizard' item.  A wizard will popup with instructions. Enter the names of your fellow travellers, select the currencies you will be spending abroad, and your home currency"
+  "instructions": "Kickback has been added to the Add-on's menu. You should see a 'Run Kickback Wizard' item.  A wizard will popup with instructions. Enter the names of your fellow travellers, select the currencies you will be spending abroad, and your home currency."
 }

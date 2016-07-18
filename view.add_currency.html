@@ -5,6 +5,8 @@
 <!--Let browser know website is optimized for mobile-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 
+<div class="alert alert-danger hidden" id="error_messages"></div>
+
 <form id="kickback_form">
 
     <div>
@@ -29,20 +31,40 @@
 
 <!--Import jQuery-->
 <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/validate.js/0.10.0/validate.min.js"></script>
 
 
 <script>
     $(function(){
         //dom ready
 
+        var constraints = {
+            'trip_currency': {
+                presence: true
+            }
+        };
+
         $('#kickback_form').submit(function(){
 
             var content = $("#kickback_form").serializeObject();
-//            console.log(JSON.stringify(content));
 
             //validation
-            if(content['trip_currency'].length == 0){
-                alert('Trip Currency is required');
+            var validate_results = validate(content, constraints);
+            if(validate_results){
+//                console.log('VALIDATE RESULTS:', JSON.stringify(validate_results));
+                var error_list = $('<ul>');
+                for(var key in validate_results){
+                    var errors_for_key = validate_results[key];
+                    for(var ndx in errors_for_key){
+                        var error_message = errors_for_key[ndx];
+                        error_list.append('<li>'+ error_message + '</li>')
+                    }
+                }
+
+                if($('#error_messages').hasClass('hidden')){
+                    $('#error_messages').removeClass('hidden');
+                }
+                $('#error_messages').html(error_list);
                 return false;
             }
 

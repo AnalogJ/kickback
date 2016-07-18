@@ -85,6 +85,7 @@ function  _setUsers(users_array){
 
 //TRIP_CURRENCIES Storage
 function _addTripCurrency(currency){
+//TODO, only add a trip currency if it doesnt already exist.
     var trip_currencies = _getTripCurrencies();
     trip_currencies.push(currency)
     _setTripCurrencies(trip_currencies);
@@ -208,3 +209,25 @@ function include(filename) {
     return HtmlService.createHtmlOutputFromFile(filename)
         .getContent();
 }
+
+function showAlert(title, message) {
+    var ui = SpreadsheetApp.getUi(); // Same variations.
+
+    var result = ui.alert(
+        title,
+        message,
+        ui.ButtonSet.OK);
+
+    // // Process the user's response.
+    // if (result == ui.Button.YES) {
+    //     // User clicked "Yes".
+    //     ui.alert('Confirmation received.');
+    // } else {
+    //     // User clicked "No" or X in the title bar.
+    //     ui.alert('Permission denied.');
+    // }
+}
+
+
+//http://www.localeplanet.com/api/auto/currencymap.json
+//https://stackoverflow.com/questions/19373860/convert-currency-names-to-currency-symbol

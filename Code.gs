@@ -137,13 +137,6 @@ function use() {
             .setWidth(500)
             .setHeight(500);
         ui.showModalDialog(html, 'Kickback Wizard');
-        _setFlag('FLAG_WIZARD_INIT', true);
-        ui.createAddonMenu()
-            .addItem('Rerun Kickback Wizard', 'reset')
-            .addItem('Add new traveller', 'add_traveller')
-            .addItem('Add new trip currency', 'add_currency')
-            .addToUi();
-
         return;
     }
     else{
@@ -513,7 +506,7 @@ function add_traveller(){
         .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
-        .setHeight(200);
+        .setHeight(300);
     ui.showModalDialog(html, 'Kickback Add Traveller');
 }
 
@@ -539,7 +532,7 @@ function add_traveller_submit(form_data){
 
 
     //add user
-    _addUser(data["traveller"])
+    _addUser(data["traveller"]);
 
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -568,8 +561,15 @@ function add_traveller_submit(form_data){
     );
     workbook.setNamedRange('TRANSACTIONS_BODY_PAID_FOR',paidForRange);
 
+    //reset styles/size the columns of the paid for bottom header
+    var payeeHeaderBotRange  = transactionsSheet.getRange(2, paidForRange.getColumn(), 1, paidForRange.getNumColumns());
+    _setSubHeaderStyle(payeeHeaderBotRange);
+
     //set the value of the new header cell
     transactionsSheet.getRange(2, paidForRange.getLastColumn()).setValue(data["traveller"]);
+
+    //set the size of the new column in the paid for section
+    transactionsSheet.autoResizeColumn(paidForRange.getLastColumn());
 
     var payeeHeaderTopRange = transactionsSheet.getRange(1, paidForRange.getColumn(), 1, paidForRange.getNumColumns());
     payeeHeaderTopRange.mergeAcross();
@@ -601,7 +601,7 @@ function add_currency(){
         .evaluate()
         .setSandboxMode(HtmlService.SandboxMode.IFRAME)
         .setWidth(500)
-        .setHeight(200);
+        .setHeight(300);
     ui.showModalDialog(html, 'Kickback Add Currency');
 }
 //TODO
@@ -629,6 +629,20 @@ function add_currency_submit(form_data){
 
 
 function reset(){
+    var ui = SpreadsheetApp.getUi(); // Same variations.
+
+    var result = ui.alert(
+        'Please confirm',
+        'Are you sure you want to re-run the Kickback wizard? All data will be lost',
+        ui.ButtonSet.YES_NO);
+
+    // Process the user's response.
+    if (result != ui.Button.YES) {
+        // User clicked "No" or X in the title bar.
+        return
+    }
+    // User clicked "Yes", continue wiping the worksheet.
+
     var workbook = SpreadsheetApp.getActiveSpreadsheet();
 
     //delete all sheets.
@@ -661,12 +675,19 @@ function wizard_submit(form_data){
 
     var settings = JSON.parse(form_data);
 
-    _setTripCurrencies(settings['trip_currencies[]']);
-    _setUserCurrency(settings['trav_currency']);
+    _setTripCurrencies(settings['purchase_currencies']);
+    _setUserCurrency(settings['payout_currency']);
 
     _clearUsers()
-    for(var ndx in settings["traveller[]"]){
-        _addUser(settings["traveller[]"][ndx]);
+    for(var ndx in settings["travellers"]){
+        _addUser(settings["travellers"][ndx]);
     }
     _populateWorkbook()
+    _setFlag('FLAG_WIZARD_INIT', true);
+    var ui = SpreadsheetApp.getUi();
+    ui.createAddonMenu()
+        .addItem('Rerun Kickback Wizard', 'reset')
+        .addItem('Add new traveller', 'add_traveller')
+        .addItem('Add new trip currency', 'add_currency')
+        .addToUi();
 }
